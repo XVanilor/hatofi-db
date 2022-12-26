@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
     db.addTable("entity");
 
     // Input file table
-    db.addTable("files");
+    db.addTable("file");
 
     db.publish();
 
