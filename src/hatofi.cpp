@@ -3,18 +3,18 @@
 //
 
 #include "lib/CLI11.hpp"
+
 #include "HaDB.h"
-#include "hatofi.h"
 
 int main(int argc, char** argv) {
 
     // Application init
     CLI::App app{"App description"};
+    std::string data_dir = std::filesystem::current_path().string();
+    app.add_option("-d,--data-directory", data_dir, "Database directory");
 
     /** Database generation **/
     CLI::App* genSub = app.add_subcommand("gen", "Generate Hatofi architecture based on config file");
-    std::string data_dir = std::filesystem::current_path().string();
-    genSub->add_option("-d,--data-directory", data_dir, "Database directory");
 
     /** Data loading **/
     CLI::App* loadSub = app.add_subcommand("load", "Loading data into Hatofi database");
@@ -43,7 +43,14 @@ int main(int argc, char** argv) {
     // Input file table
     db.addTable("file");
 
-    db.publish();
+    if(app.got_subcommand("gen"))
+    {
+        db.publish();
+    }
+    else if(app.got_subcommand("load"))
+    {
+        db.load(file_loaded);
+    }
 
     return 0;
 }
