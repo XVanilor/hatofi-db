@@ -16,18 +16,19 @@ public:
 
     explicit HaDB(const std::string& fsRoot);
 
-    HaDB setName(const std::string& newName);
+    HaDB* setName(const std::string& newName);
     void setRoot(const std::string& fsRoot);
     std::string getRoot();
+    void publish();
 
-    HaDB addTable(const std::string& tableName);
-    HaDB delTable(std::string tableName);
-    std::vector<HaTable> getTables();
+    HaTable* addTable(const std::string& tableName);
+    void delTable(std::string tableName);
+    std::vector<HaTable*> getTables();
 
 private:
     std::string dbName;
     std::string root;
-    std::vector<HaTable> tables;
+    std::vector<HaTable*> tables;
 
 };
 

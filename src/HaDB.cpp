@@ -2,6 +2,7 @@
 // Created by vanilor on 23/12/22.
 //
 
+#include <filesystem>
 #include <sys/stat.h>
 #include <stdexcept>
 
@@ -9,22 +10,16 @@
 #include "HaDB.h"
 #include "HaTable.h"
 
-
-struct stat info;
-
 HaDB::HaDB(const std::string& fsRoot) {
 
     setRoot(fsRoot);
     // @TODO Load configuration ?
 }
 
-HaDB HaDB::setName(const std::string& newName) {
-
-    if(!isResourceNameValid(newName))
-        throw std::invalid_argument("Database name must accepts only letters, numbers, and -_ characters");
+HaDB* HaDB::setName(const std::string& newName) {
 
     this->dbName = newName;
-    return *this;
+    return this;
 }
 
 void HaDB::setRoot(const std::string &fsRoot) {
@@ -41,27 +36,34 @@ std::string HaDB::getRoot() {
     return this->root;
 }
 
-HaDB HaDB::addTable(const std::string& tableName) {
+HaTable* HaDB::addTable(const std::string& tableName) {
 
     if(dirExists(this->getRoot() + "/" + tableName))
     {
         throw std::invalid_argument("Table "+tableName+" already exists");
     }
 
-    HaTable newTable = HaTable(tableName);
-    newTable.publish(this->getRoot());
-
+    HaTable* newTable = new HaTable(tableName);
     this->tables.push_back(newTable);
 
-    return *this;
+    return newTable;
 }
 
-HaDB HaDB::delTable(std::string tableName) {
+void HaDB::delTable(std::string tableName) {
 
-    return *this;
+    return;
 }
 
-std::vector<HaTable> HaDB::getTables() {
+std::vector<HaTable*> HaDB::getTables() {
 
     return {};
+}
+
+void HaDB::publish() {
+
+    for(HaTable* t : tables)
+    {
+        printf("Making %s...\n", t->getName().c_str());
+        t->publish(this->getRoot());
+    }
 }
