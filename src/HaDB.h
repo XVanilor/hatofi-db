@@ -25,6 +25,8 @@ public:
     void delTable(std::string tableName);
     std::vector<HaTable*> getTables();
 
+    void load(const std::string& file);
+
 private:
     std::string dbName;
     std::string root;

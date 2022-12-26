@@ -55,3 +55,30 @@ std::string toHex(int number, bool upper_case = false)
 
     return hexRes;
 }
+
+std::vector<std::string> tokenize(const std::string& s, const std::string& del = " ")
+{
+    std::vector<std::string> res;
+
+    int start, end = -1*del.size();
+    do {
+        start = end + del.size();
+        end = s.find(del, start);
+        res.push_back(s.substr(start, end - start));
+    } while (end != -1);
+
+    return res;
+}
+
+std::string currentDate()
+{
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
+
+    return buf;
+}
