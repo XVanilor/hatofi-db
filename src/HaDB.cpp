@@ -108,8 +108,5 @@ void HaDB::load(const std::string& file)
         entityOutFile.open(entityOutFileName, std::ios_base::app); // append instead of overwrite
         entityOutFile << fmt::format("{} {} {}\n", columns[3], curDate, leakUuid);
         entityOutFile.close();
-
-        std::cout << dataOutFileName << std::endl;
-        std::cout << entityOutFileName << std::endl;
     }
 }
