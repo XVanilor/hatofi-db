@@ -7,7 +7,8 @@ Input file format:
 <entity_key>:<dataclass>:<base64_encoded_data>:<data_md5>
 ```
 Assuming current date is `2022-01-01`
-Assuming leak UUIDv4 is `693ad1be-c353-4562-b12a-930f2ed43b79`
+
+Assuming file UUIDv4 is `693ad1be-c353-4562-b12a-930f2ed43b79`
 
 Example input.txt:
 ```txt
