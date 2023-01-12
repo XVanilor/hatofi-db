@@ -13,6 +13,12 @@
 class HaDB {
 
 public:
+    enum MATCH_TYPE {
+        EXACT,
+        PARTIAL
+    };
+
+    const size_t MIN_SEARCH_LEN = 7;
 
     explicit HaDB(const std::string& fsRoot);
 
@@ -26,6 +32,7 @@ public:
     std::vector<HaTable*> getTables();
 
     void load(const std::string& file);
+    std::string query(std::string dataclass, std::string searchString, MATCH_TYPE matchType);
 
 private:
     std::string dbName;
