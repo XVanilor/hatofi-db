@@ -26,7 +26,7 @@ ae68135e4f74eed19a79fd982c7c4f98:email:ZGF0YTJAZW1haWwuY29t:ae68135e4f74eed19a79
 Desired filesystem output architecture:
 ```txt
 > db/
-    .meta Database configuration file
+    .dbmeta Database configuration file
     > data/
         > dataclasses/
             > email/
