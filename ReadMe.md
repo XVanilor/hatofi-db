@@ -1,5 +1,15 @@
 # Hatofi DB
 
+## What ?
+
+Hatofi, stands for "Hashmap to Filesystem" is a key-value database running on Linux. Aims to reduce IO latency from traditional SQL database with less financial cost compared to Redis (stored in filesystem instead of RAM)
+
+## Usage
+
+- Database creation via config file via `hatofi --data_directory <data_dir> gen --file <config_file.txt>`
+- Import data using `hatofi --data_directory <data_dir> load --file <input.txt>`
+- Query data (partial or exact match) using `hatofi --data_directory <data_dir> query [--exact|--partial] <your_search>`
+
 ## Input Format
 
 Input file format:
