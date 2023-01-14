@@ -5,21 +5,24 @@
 #include "lib/CLI11.hpp"
 
 #include "HaDB.h"
+#include "Log.h"
 
 int main(int argc, char** argv) {
 
     // Application init
     CLI::App app{"App description"};
     std::string data_dir = std::filesystem::current_path().string();
-    app.add_option("-d,--data-directory", data_dir, "Database directory");
+    app.add_option("-d,--data-directory", data_dir, "Database directory")->required();
 
     /** Database generation **/
     CLI::App* genSub = app.add_subcommand("gen", "Generate Hatofi architecture based on config file");
+    std::string config_file;
+    genSub->add_option("-f,--file", config_file, "Config file to load")->required();
 
     /** Data loading **/
     CLI::App* loadSub = app.add_subcommand("load", "Load data into Hatofi database");
     std::string file_loaded;
-    loadSub->add_option("-f,--file", file_loaded, "File to be loaded");
+    loadSub->add_option("-f,--file", file_loaded, "File to be loaded")->required();
 
     /** Data Query */
     CLI::App* querySub = app.add_subcommand("query", "Query data (exact or partial) from Hatofi DB");
@@ -45,30 +48,27 @@ int main(int argc, char** argv) {
     }
 
     char* real_data_dir = realpath(data_dir.c_str(), nullptr);
-
+    if(real_data_dir == nullptr)
+    {
+        log_error("Data directory "+data_dir+" is invalid or does not exists");
+        return 1;
+    }
+    data_dir.clear();
     printf("Data directory: %s\n", real_data_dir);
 
     HaDB db = HaDB(real_data_dir);
-    db.setName("dev");
-
-    // @TODO Create template of default table with generated structure then copy into many tables instead of generating for all
-    // Dataclass table
-    db.addTable("email")->setNS("dataclass");
-    db.addTable("password")->setNS("dataclass");
-
-    // Entity table
-    db.addTable("entity");
-
-    // Input file table
-    db.addTable("file");
 
     if(app.got_subcommand("gen"))
     {
-        db.publish();
+        log_info("Loading configuration...");
+        db.fromConfig(config_file);
+        log_info("Configuration successfully loaded");
     }
     else if(app.got_subcommand("load"))
     {
+        log_info("Loading data...");
         db.load(file_loaded);
+        log_info("Data loaded successfully");
     }
 
     else if(app.got_subcommand("query"))

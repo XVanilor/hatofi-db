@@ -1,0 +1,12 @@
+[hatofi]
+name=Sample DB
+[table]
+ns=dataclass
+name=email
+[table]
+ns=dataclass
+name=password
+[table]
+name=entity
+[table]
+name=file

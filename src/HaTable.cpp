@@ -12,10 +12,16 @@
 
 HaTable::HaTable(const std::string &newName) {
 
+    this->setName(newName);
+}
+
+HaTable* HaTable::setName(const std::string& newName)
+{
     if(!isResourceNameValid(newName))
-        throw std::invalid_argument("Invalid table name HaTable");
+        throw std::invalid_argument("Invalid table name "+newName);
 
     this->tableName = newName;
+    return this;
 }
 
 std::string HaTable::getName() {
@@ -50,7 +56,7 @@ void HaTable::createDirectoryLevel(const std::string& parentDir, int currentDept
     for (int j = 0; j < pow(16, this->bytesPerDepth); j++) {
 
         std::string i_str = toHex(j);
-        if(i_str.length() < this->bytesPerDepth)
+        if((int)i_str.length() < this->bytesPerDepth)
             i_str.insert(0, this->bytesPerDepth - i_str.length(), '0');
 
         std::string subDir = parentDir + "/" + i_str;
@@ -78,4 +84,9 @@ HaTable* HaTable::setNS(const std::string &newNs) {
 
     this->ns = newNs;
     return this;
+}
+
+std::string HaTable::getNS() {
+
+    return this->ns;
 }
