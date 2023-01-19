@@ -31,6 +31,13 @@ ae68135e4f74eed19a79fd982c7c4f98:email:ZGF0YTJAZW1haWwuY29t:ae68135e4f74eed19a79
 26af7d285fa312aa2f8d3857d0f00af4:password:YW5hd2Vzb21lcGFzc3dvcmQ=:90282e03043af181c985c9891c52c00f
 ```
 
+```bash
+$ md5sum input.txt 
+8998c19bb14b9af66ccdc79bed5818c4  input.txt
+$ sha256 input.txt
+99226b116e370a25130cce7e55fe3f813a0f3168c30e584de422e9f43b76fc1a input.txt
+```
+
 ## Output Format
 
 Desired filesystem output architecture:
@@ -57,7 +64,7 @@ Desired filesystem output architecture:
                 > 90/28/
                     > 90282e03043af181c985c9891c52c00f.md5 << b64:YW5hd2Vzb21lcGFzc3dvcmQ=
                 > xx/xx/
-        > entity
+        > entity/
             > xx/xx/
             > 1e/77/
                 > 1e77fd2c7a59f06a6c8dc8ace3ebf221.md5 << 1e77fd2c7a59f06a6c8dc8ace3ebf221 2022-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
@@ -67,5 +74,10 @@ Desired filesystem output architecture:
                 > 26af7d285fa312aa2f8d3857d0f00af4.md5 << 26af7d285fa312aa2f8d3857d0f00af4 2022-01-01 693ad1be-c353-4562-b12a-930f2ed43b79 << 90282e03043af181c985c9891c52c00f 2022-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
             > ae/68/
                 > ae68135e4f74eed19a79fd982c7c4f98.md5 << ae68135e4f74eed19a79fd982c7c4f98 2022-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
+            > xx/xx/
+        > file
+            > xx/xx/
+            > 99/22/
+                > 99226b116e370a25130cce7e55fe3f813a0f3168c30e584de422e9f43b76fc1a.sha256 << md5 8998c19bb14b9af66ccdc79bed5818c4 2022-01-01 << sha256 99226b116e370a25130cce7e55fe3f813a0f3168c30e584de422e9f43b76fc1a 2022-01-01 << status started << status done
             > xx/xx/
 ```

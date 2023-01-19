@@ -73,7 +73,7 @@ std::vector<std::string> tokenize(const std::string& s, const std::string& del =
 std::string currentDate()
 {
     time_t     now = time(0);
-    struct tm  tstruct;
+    struct tm  tstruct{};
     char       buf[80];
     tstruct = *localtime(&now);
     // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
@@ -83,9 +83,33 @@ std::string currentDate()
     return buf;
 }
 
+std::string exec(std::string cmd)
+{
+    std::array<char, 128> buffer{};
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+    {
+        result += buffer.data();
+    }
+    // Remove EOL of cmd output
+    result.erase(std::remove(result.begin(), result.end(), '\n'),result.end());
+
+    return result;
+}
+
 bool is_number(const std::string& s)
 {
     std::string::const_iterator it = s.begin();
     while (it != s.end() && std::isdigit(*it)) ++it;
     return !s.empty() && it == s.end();
+}
+
+bool is_valid_uuid(const std::string& s)
+{
+    static const std::regex e("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[89aAbB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}");
+    return regex_match(s, e);
 }
