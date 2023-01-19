@@ -67,9 +67,6 @@ std::vector<HaTable*> HaDB::getTables() {
 }
 
 HaDB* HaDB::fromConfig(const std::string &configFile) {
-
-    // Start i/o operations
-    std::ios::sync_with_stdio(false);
     std::ifstream ifs(configFile);
 
     std::string currentSectionName;
@@ -209,11 +206,11 @@ void HaDB::publish() {
         configFile << "ns="+t->getNS()+"\n";
         configFile << "name="+t->getName()+"\n";
         configFile << "maxDepth="+std::to_string(t->maxDepth)+"\n";
-        configFile << "bytePerDepth="+std::to_string(t->bytesPerDepth)+"\n";
+        configFile << "bytesPerDepth="+std::to_string(t->bytesPerDepth)+"\n";
 
         if(dirExists(this->getRoot() + "/" + t->getName()))
         {
-            throw std::invalid_argument("[ERROR] Table "+t->getName()+" already exists");
+            log_warn("Table "+t->getName()+" already exists");
         }
 
         t->publish(this->getRoot());
@@ -234,16 +231,31 @@ void HaDB::load(const std::string& file)
 
     std::string line;
 
-    int i = 0;
+    // Get leak UUID in first line and check it\'s value
+    std::getline(ifs, leakUuid);
+    if(!is_valid_uuid(leakUuid))
+    {
+        log_error("Leak UUID '"+leakUuid+"' in file "+file+" is invalid");
+        exit(1);
+    }
+
+    // Register file hash & confirm startup
+    std::ofstream fileOut;
+    std::string inputFileMd5 = exec("md5sum '"+file+"' | cut -d' ' -f1");
+    std::string inputFileSha256 = exec("sha256sum '"+file+"' | cut -d' ' -f1");
+    std::string fileOutFileName = fmt::format("{}/file/{}/{}/{}.sha256",
+                                              this->getRoot(),
+                                              inputFileSha256.substr(0,2),
+                                              inputFileSha256.substr(2,2),
+                                              inputFileSha256
+                                              );
+
+    fileOut.open(fileOutFileName, std::ios_base::app); // append instead of overwrite
+    fileOut << fmt::format("md5 {}\nsha256 {}\nstatus started\n", inputFileMd5, inputFileSha256);
+    fileOut.close();
+
     while(std::getline(ifs, line))
     {
-        // Get leak UUID
-        if(i++ == 0)
-        {
-            leakUuid = line;
-            continue;
-        }
-
         std::ofstream dataOutFile;
         std::ofstream entityOutFile;
 
@@ -260,6 +272,11 @@ void HaDB::load(const std::string& file)
         entityOutFile << fmt::format("{} {} {}\n", columns[3], curDate, leakUuid);
         entityOutFile.close();
     }
+
+    // Confirm file loading completeness
+    fileOut.open(fileOutFileName, std::ios_base::app); // append instead of overwrite
+    fileOut << "status done\n";
+    fileOut.close();
 }
 
 std::string HaDB::query(const std::string& dataclass, std::string searchString, HaDB::MATCH_TYPE matchType)
