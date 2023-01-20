@@ -225,6 +225,11 @@ void HaDB::load(const std::string& file)
     const std::string curDate = currentDate();
     std::string leakUuid;
 
+    if(!std::filesystem::exists(file))
+    {
+        throw std::invalid_argument("Input file "+file+" does not exists");
+    }
+
     // Start i/o operations
     std::ios::sync_with_stdio(false);
     std::ifstream ifs(file);
@@ -243,14 +248,33 @@ void HaDB::load(const std::string& file)
     std::ofstream fileOut;
     std::string inputFileMd5 = exec("md5sum '"+file+"' | cut -d' ' -f1");
     std::string inputFileSha256 = exec("sha256sum '"+file+"' | cut -d' ' -f1");
-    std::string fileOutFileName = fmt::format("{}/file/{}/{}/{}.sha256",
+    std::string fileRegisterFileName = fmt::format("{}/file/{}/{}/{}.sha256",
                                               this->getRoot(),
                                               inputFileSha256.substr(0,2),
                                               inputFileSha256.substr(2,2),
                                               inputFileSha256
                                               );
 
-    fileOut.open(fileOutFileName, std::ios_base::app); // append instead of overwrite
+    // Check if file was already registered
+    if(std::filesystem::exists(fileRegisterFileName))
+    {
+        // Check if file was fully imported
+        if(exec("grep '^status done$' '"+fileRegisterFileName+"'") == "status done")
+        {
+            throw std::invalid_argument("File was already registered in database");
+        }
+        /**
+         *  File was registered but not completely imported
+         *  It can be either an error in runtime (hatofi load process was aborted using kill)
+         *  or that an another process with the same file is running
+         */
+        else
+        {
+            throw std::runtime_error("File was registered in database but import was not completed. Use -f or --force to force import (Warning: data may be loaded twice if another import process with this input file is running");
+        }
+    }
+
+    fileOut.open(fileRegisterFileName, std::ios_base::app); // append instead of overwrite
     fileOut << fmt::format("md5 {}\nsha256 {}\nstatus started\n", inputFileMd5, inputFileSha256);
     fileOut.close();
 
@@ -274,7 +298,7 @@ void HaDB::load(const std::string& file)
     }
 
     // Confirm file loading completeness
-    fileOut.open(fileOutFileName, std::ios_base::app); // append instead of overwrite
+    fileOut.open(fileRegisterFileName, std::ios_base::app); // append instead of overwrite
     fileOut << "status done\n";
     fileOut.close();
 }
