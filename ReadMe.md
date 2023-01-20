@@ -34,7 +34,7 @@ ae68135e4f74eed19a79fd982c7c4f98:email:ZGF0YTJAZW1haWwuY29t:ae68135e4f74eed19a79
 ```bash
 $ md5sum input.txt 
 8998c19bb14b9af66ccdc79bed5818c4  input.txt
-$ sha256 input.txt
+$ sha256sum input.txt
 99226b116e370a25130cce7e55fe3f813a0f3168c30e584de422e9f43b76fc1a input.txt
 ```
 
