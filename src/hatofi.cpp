@@ -17,12 +17,12 @@ int main(int argc, char** argv) {
     /** Database generation **/
     CLI::App* genSub = app.add_subcommand("gen", "Generate Hatofi architecture based on config file");
     std::string config_file;
-    genSub->add_option("-f,--file", config_file, "Config file to load")->required();
+    genSub->add_option("-c,--config", config_file, "Config file to load")->required();
 
     /** Data loading **/
     CLI::App* loadSub = app.add_subcommand("load", "Load data into Hatofi database");
     std::string file_loaded;
-    loadSub->add_option("-f,--file", file_loaded, "File to be loaded")->required();
+    loadSub->add_option("-i,--input", file_loaded, "File to be loaded")->required();
 
     /** Data Query */
     CLI::App* querySub = app.add_subcommand("query", "Query data (exact or partial) from Hatofi DB");
@@ -66,9 +66,22 @@ int main(int argc, char** argv) {
     }
     else if(app.got_subcommand("load"))
     {
-        log_info("Loading data...");
-        db.load(file_loaded);
-        log_info("Data loaded successfully");
+        try {
+
+            log_info("Loading data...");
+            db.load(file_loaded);
+            log_info("Data loaded successfully");
+
+        } catch (const std::invalid_argument& e)
+        {
+            log_error(e.what());
+            exit(1);
+        }
+        catch (const std::runtime_error& e)
+        {
+            log_error(e.what());
+            exit(2);
+        }
     }
 
     else if(app.got_subcommand("query"))
