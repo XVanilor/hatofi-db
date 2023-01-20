@@ -9,10 +9,19 @@
 
 int main(int argc, char** argv) {
 
-    // Application init
-    CLI::App app{"App description"};
+    const std::string BUILD_VERSION = "1.1";
+
+    /** Application init **/
+    CLI::App app{"HatofiDB - Hashmap To Filesystem Database\n    > Created by Matthieu \"Vanilor\" Herbette\n    > Find the repo at https://github.com/XVanilor/hatofi-db/\n"};
     std::string data_dir = std::filesystem::current_path().string();
-    app.add_option("-d,--data-directory", data_dir, "Database directory")->required();
+    bool show_version = false;
+
+    CLI::App* startOpt = app.add_option_group("init");
+    auto nominalStartOpt = startOpt->add_option("-d,--data-directory", data_dir, "Database directory");
+    auto showVersionOpt = startOpt->add_flag("-v,--version", show_version, "Print binary version");
+
+    showVersionOpt->excludes(nominalStartOpt);
+    nominalStartOpt->excludes(showVersionOpt);
 
     /** Database generation **/
     CLI::App* genSub = app.add_subcommand("gen", "Generate Hatofi architecture based on config file");
@@ -28,7 +37,7 @@ int main(int argc, char** argv) {
 
     /** Data Query */
     CLI::App* querySub = app.add_subcommand("query", "Query data (exact or partial) from Hatofi DB");
-    CLI::App* queryOpt = querySub->add_option_group("queryOpt");
+    CLI::App* queryOpt = querySub->add_option_group("search_type");
 
     bool queryPartialMatch{false};
     bool queryExactMatch{true}; // Default is full-exact search because it's faster
@@ -56,11 +65,19 @@ int main(int argc, char** argv) {
         return 1;
     }
     data_dir.clear();
-    printf("Data directory: %s\n", real_data_dir);
+    if(!show_version)
+        printf("Data directory: %s\n", real_data_dir);
 
     HaDB db = HaDB(real_data_dir);
 
-    if(app.got_subcommand("gen"))
+    if(show_version)
+    {
+        printf("HatofiDB %s\n", BUILD_VERSION.c_str());
+        printf("    > Created by Matthieu \"Vanilor\" Herbette\n");
+        printf("    > Find the public repo at https://github.com/XVanilor/hatofi-db\n");
+        exit(0);
+    }
+    else if(app.got_subcommand("gen"))
     {
         log_info("Loading configuration...");
         db.fromConfig(config_file);
@@ -95,6 +112,10 @@ int main(int argc, char** argv) {
             task_uuid = db.query(dt, search_string, HaDB::MATCH_TYPE::EXACT);
 
         printf("%s\n",task_uuid.c_str());
+    }
+    else
+    {
+        log_error("Please enter a command or use -h,--help");
     }
 
     return 0;
