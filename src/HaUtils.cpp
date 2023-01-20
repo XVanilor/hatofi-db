@@ -70,7 +70,7 @@ std::vector<std::string> tokenize(const std::string& s, const std::string& del =
     return res;
 }
 
-std::string currentDate()
+std::string currentDate(const std::string& format)
 {
     time_t     now = time(0);
     struct tm  tstruct{};
@@ -78,7 +78,7 @@ std::string currentDate()
     tstruct = *localtime(&now);
     // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
     // for more information about date/time format
-    strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
+    strftime(buf, sizeof(buf), format.c_str(), &tstruct);
 
     return buf;
 }

@@ -22,7 +22,9 @@ int main(int argc, char** argv) {
     /** Data loading **/
     CLI::App* loadSub = app.add_subcommand("load", "Load data into Hatofi database");
     std::string file_loaded;
+    bool force_file_load = false;
     loadSub->add_option("-i,--input", file_loaded, "File to be loaded")->required();
+    loadSub->add_flag("-f,--force", force_file_load, "Force file to be loaded in case of conflict");
 
     /** Data Query */
     CLI::App* querySub = app.add_subcommand("query", "Query data (exact or partial) from Hatofi DB");
@@ -69,7 +71,7 @@ int main(int argc, char** argv) {
         try {
 
             log_info("Loading data...");
-            db.load(file_loaded);
+            db.load(file_loaded, force_file_load);
             log_info("Data loaded successfully");
 
         } catch (const std::invalid_argument& e)

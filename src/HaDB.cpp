@@ -219,10 +219,10 @@ void HaDB::publish() {
     configFile.close();
 }
 
-void HaDB::load(const std::string& file)
+void HaDB::load(const std::string& file, bool force = false)
 {
     // Get current date
-    const std::string curDate = currentDate();
+    const std::string curDate = currentDate("%Y-%m-%d");
     std::string leakUuid;
 
     if(!std::filesystem::exists(file))
@@ -258,8 +258,13 @@ void HaDB::load(const std::string& file)
     // Check if file was already registered
     if(std::filesystem::exists(fileRegisterFileName))
     {
+        if(force)
+        {
+            // Remove old log file if user asked to force importation
+            remove(fileRegisterFileName.c_str());
+        }
         // Check if file was fully imported
-        if(exec("grep '^status done$' '"+fileRegisterFileName+"'") == "status done")
+        else if(exec("grep '^status done$' '"+fileRegisterFileName+"'") == "status done")
         {
             throw std::invalid_argument("File was already registered in database");
         }
@@ -275,7 +280,11 @@ void HaDB::load(const std::string& file)
     }
 
     fileOut.open(fileRegisterFileName, std::ios_base::app); // append instead of overwrite
-    fileOut << fmt::format("md5 {}\nsha256 {}\nstatus started\n", inputFileMd5, inputFileSha256);
+    fileOut << fmt::format("md5 {}\nsha256 {}\ncreated_at {}\nstatus started\n",
+                           inputFileMd5,
+                           inputFileSha256,
+                           currentDate("%Y-%m-%dT%H:%M:%S")
+                           );
     fileOut.close();
 
     while(std::getline(ifs, line))
