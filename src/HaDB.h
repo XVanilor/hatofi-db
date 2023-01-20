@@ -34,7 +34,7 @@ public:
     void delTable(std::string tableName);
     std::vector<HaTable*> getTables();
 
-    void load(const std::string& file);
+    void load(const std::string& file, bool force);
     std::string query(const std::string& dataclass, std::string searchString, MATCH_TYPE matchType);
 
 private:
