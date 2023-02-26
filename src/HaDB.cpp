@@ -399,7 +399,7 @@ std::string HaDB::query(const std::string& dataclass, std::string searchString, 
         if(!std::filesystem::exists(fPath))
         {
             std::ofstream output(fPath);
-            output << L"Data does not exits";
+            output << "Data does not exits" << std::endl;
             return task_uuid;
         }
 

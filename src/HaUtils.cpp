@@ -2,7 +2,6 @@
 // Created by vanilor on 23/12/22.
 //
 
-#include <openssl/evp.h>
 #include <regex>
 #include <string>
 #include <sys/stat.h>
