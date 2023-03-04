@@ -15,7 +15,7 @@ Hatofi, stands for "Hashmap to Filesystem" is a key-value database running on Li
 
 Input file format:
 ```txt
-<entity_dataclass>:<entity_key>:<entity_raw_length><dataclass>:<base64_encoded_data>:<data_md5>
+<entity_dataclass>:<entity_key>:<dataclass>:<base64_encoded_data>:<data_md5>
 ```
 Assuming current date is `2022-01-01`
 
@@ -24,12 +24,12 @@ Assuming file UUIDv4 is `693ad1be-c353-4562-b12a-930f2ed43b79`
 Example input.txt:
 ```txt
 693ad1be-c353-4562-b12a-930f2ed43b79
-email:13:20bacbe5082d09eb3ac96a4565c1dc33:email:ZGF0YTFAbmV0LmNvbQ==:20bacbe5082d09eb3ac96a4565c1dc33
-email:13:20bacbe5082d09eb3ac96a4565c1dc33:password:cGFzc3dvcmQ=:5f4dcc3b5aa765d61d8327deb882cf99
-email:15:ae68135e4f74eed19a79fd982c7c4f98:email:ZGF0YTJAZW1haWwuY29t:ae68135e4f74eed19a79fd982c7c4f98
-email:15:1e77fd2c7a59f06a6c8dc8ace3ebf221:email:ZGF0YTNAZW1haWwuY29t:1e77fd2c7a59f06a6c8dc8ace3ebf221
-email:16:26af7d285fa312aa2f8d3857d0f00af4:email:ZGF0YTRAZG9tYWluLmNvbQ==:26af7d285fa312aa2f8d3857d0f00af4
-email:16::26af7d285fa312aa2f8d3857d0f00af4:password:YW5hd2Vzb21lcGFzc3dvcmQ=:90282e03043af181c985c9891c52c00f
+email:20bacbe5082d09eb3ac96a4565c1dc33:email:ZGF0YTFAbmV0LmNvbQ==:20bacbe5082d09eb3ac96a4565c1dc33
+email:20bacbe5082d09eb3ac96a4565c1dc33:password:cGFzc3dvcmQ=:5f4dcc3b5aa765d61d8327deb882cf99
+email:ae68135e4f74eed19a79fd982c7c4f98:email:ZGF0YTJAZW1haWwuY29t:ae68135e4f74eed19a79fd982c7c4f98
+email:1e77fd2c7a59f06a6c8dc8ace3ebf221:email:ZGF0YTNAZW1haWwuY29t:1e77fd2c7a59f06a6c8dc8ace3ebf221
+email:26af7d285fa312aa2f8d3857d0f00af4:email:ZGF0YTRAZG9tYWluLmNvbQ==:26af7d285fa312aa2f8d3857d0f00af4
+email:26af7d285fa312aa2f8d3857d0f00af4:password:YW5hd2Vzb21lcGFzc3dvcmQ=:90282e03043af181c985c9891c52c00f
 ```
 
 ```bash
