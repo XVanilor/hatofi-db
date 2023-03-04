@@ -15,7 +15,7 @@ Hatofi, stands for "Hashmap to Filesystem" is a key-value database running on Li
 
 Input file format:
 ```txt
-<entity_key>:<dataclass>:<base64_encoded_data>:<data_md5>
+<entity_dataclass>:<entity_key>:<entity_raw_length><dataclass>:<base64_encoded_data>:<data_md5>
 ```
 Assuming current date is `2022-01-01`
 
@@ -24,12 +24,12 @@ Assuming file UUIDv4 is `693ad1be-c353-4562-b12a-930f2ed43b79`
 Example input.txt:
 ```txt
 693ad1be-c353-4562-b12a-930f2ed43b79
-20bacbe5082d09eb3ac96a4565c1dc33:email:ZGF0YTFAbmV0LmNvbQ==:20bacbe5082d09eb3ac96a4565c1dc33
-20bacbe5082d09eb3ac96a4565c1dc33:password:cGFzc3dvcmQ=:5f4dcc3b5aa765d61d8327deb882cf99
-ae68135e4f74eed19a79fd982c7c4f98:email:ZGF0YTJAZW1haWwuY29t:ae68135e4f74eed19a79fd982c7c4f98
-1e77fd2c7a59f06a6c8dc8ace3ebf221:email:ZGF0YTNAZW1haWwuY29t:1e77fd2c7a59f06a6c8dc8ace3ebf221
-26af7d285fa312aa2f8d3857d0f00af4:email:ZGF0YTRAZG9tYWluLmNvbQ==:26af7d285fa312aa2f8d3857d0f00af4
-26af7d285fa312aa2f8d3857d0f00af4:password:YW5hd2Vzb21lcGFzc3dvcmQ=:90282e03043af181c985c9891c52c00f
+email:13:20bacbe5082d09eb3ac96a4565c1dc33:email:ZGF0YTFAbmV0LmNvbQ==:20bacbe5082d09eb3ac96a4565c1dc33
+email:13:20bacbe5082d09eb3ac96a4565c1dc33:password:cGFzc3dvcmQ=:5f4dcc3b5aa765d61d8327deb882cf99
+email:15:ae68135e4f74eed19a79fd982c7c4f98:email:ZGF0YTJAZW1haWwuY29t:ae68135e4f74eed19a79fd982c7c4f98
+email:15:1e77fd2c7a59f06a6c8dc8ace3ebf221:email:ZGF0YTNAZW1haWwuY29t:1e77fd2c7a59f06a6c8dc8ace3ebf221
+email:16:26af7d285fa312aa2f8d3857d0f00af4:email:ZGF0YTRAZG9tYWluLmNvbQ==:26af7d285fa312aa2f8d3857d0f00af4
+email:16::26af7d285fa312aa2f8d3857d0f00af4:password:YW5hd2Vzb21lcGFzc3dvcmQ=:90282e03043af181c985c9891c52c00f
 ```
 
 ```bash
@@ -48,98 +48,78 @@ Desired filesystem output architecture:
     > data/
         > dataclasses/
             > email/
+                > _lower_or_equal_8/
+                > _lower_or_equal_10/
+                > _lower_or_equal_12/
+                > _more_than_12/
+                    > 1e77fd2c7a59f06a6c8dc8ace3ebf221 -> ../1e/77/1e77fd2c7a59f06a6c8dc8ace3ebf221
+                    > 20bacbe5082d09eb3ac96a4565c1dc33 -> ../20/ba/20bacbe5082d09eb3ac96a4565c1dc33
+                    > 26af7d285fa312aa2f8d3857d0f00af4 -> ../26/af/26af7d285fa312aa2f8d3857d0f00af4
+                    > ae68135e4f74eed19a79fd982c7c4f98 -> ../ae/68/ae68135e4f74eed19a79fd982c7c4f98
                 > xx/xx/
                     > lower_or_equal_8/
                     > lower_or_equal_10/
                     > lower_or_equal_12/
                     > more_than_12/
                 > 1e/77/
-                    > lower_or_equal_8/
-                    > lower_or_equal_10/
-                    > lower_or_equal_12/
-                    > more_than_12/
-                        > 1e77fd2c7a59f06a6c8dc8ace3ebf221/
-                            > 1e77fd2c7a59f06a6c8dc8ace3ebf221.md5 << b64:ZGF0YTNAZW1haWwuY29t
-                            > links/
-                            > logs/
-                                import-2022-01-01.log
+                    > 1e77fd2c7a59f06a6c8dc8ace3ebf221/
+                        > 1e77fd2c7a59f06a6c8dc8ace3ebf221.md5 << b64:ZGF0YTNAZW1haWwuY29t
+                        > links/
+                        > logs/
+                            import-2022-01-01.log
                 > 20/ba/
-                    > lower_or_equal_8/
-                    > lower_or_equal_10/
-                    > lower_or_equal_12/
-                    > more_than_12/
-                        > 20bacbe5082d09eb3ac96a4565c1dc33
-                            > 20bacbe5082d09eb3ac96a4565c1dc33.md5 << b64:ZGF0YTFAbmV0LmNvbQ==
-                            > links/
-                                > 5f4dcc3b5aa765d61d8327deb882cf99 -> ../../../../../password/5f/4d/5f4dcc3b5aa765d61d8327deb882cf99
-                            > logs/
-                                import.log << 20bacbe5082d09eb3ac96a4565c1dc33 2022-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
-                                import.log.1    # Old logs
+                    > 20bacbe5082d09eb3ac96a4565c1dc33
+                        > 20bacbe5082d09eb3ac96a4565c1dc33.md5 << b64:ZGF0YTFAbmV0LmNvbQ==
+                        > links/
+                            > 5f4dcc3b5aa765d61d8327deb882cf99 -> ../../../../../password/5f/4d/5f4dcc3b5aa765d61d8327deb882cf99
+                        > logs/
+                            import.log << 20bacbe5082d09eb3ac96a4565c1dc33 2022-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
+                            import.log.1    # Old logs
                 > 26/af/
-                    > lower_or_equal_8/
-                    > lower_or_equal_10/
+                    > 26af7d285fa312aa2f8d3857d0f00af4
                         > 26af7d285fa312aa2f8d3857d0f00af4.md5 << b64:ZGF0YTRAZG9tYWluLmNvbQ==
-                    > lower_or_equal_12/
-                    > more_than_12/
-                        > 26af7d285fa312aa2f8d3857d0f00af4
-                            > 26af7d285fa312aa2f8d3857d0f00af4.md5 << b64:ZGF0YTRAZG9tYWluLmNvbQ==
-                            > links/
-                                > 5f4dcc3b5aa765d61d8327deb882cf99 -> ../../../../../password/90/28/90282e03043af181c985c9891c52c00f
-                            > logs/
-                                import.log << 26af7d285fa312aa2f8d3857d0f00af4 2022-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
-                                import.log.1    # Old logs
+                        > links/
+                            > 5f4dcc3b5aa765d61d8327deb882cf99 -> ../../../../../password/90/28/90282e03043af181c985c9891c52c00f
+                        > logs/
+                            import.log << 26af7d285fa312aa2f8d3857d0f00af4 2022-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
+                            import.log.1    # Old logs
                 > ae/68/
-                    > lower_or_equal_8/
-                    > lower_or_equal_10/
+                    > ae68135e4f74eed19a79fd982c7c4f98
                         > ae68135e4f74eed19a79fd982c7c4f98.md5 << b64:ZGF0YTJAZW1haWwuY29t
-                    > lower_or_equal_12/
-                    > more_than_12/
-                        > ae68135e4f74eed19a79fd982c7c4f98
-                            > ae68135e4f74eed19a79fd982c7c4f98.md5 << b64:ZGF0YTJAZW1haWwuY29t
-                            > links/
-                            > logs/
-                                import.log << ae68135e4f74eed19a79fd982c7c4f98 2022-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
-                                import.log.1    # Old logs
+                        > links/
+                        > logs/
+                            import.log << ae68135e4f74eed19a79fd982c7c4f98 2022-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
+                            import.log.1    # Old logs
                 > xx/xx/
                     > lower_or_equal_8/
                     > lower_or_equal_10/
                     > lower_or_equal_12/
                     > more_than_12/
             > password/
-                > xx/xx/
-                    > lower_or_equal_8/
-                    > lower_or_equal_10/
-                    > lower_or_equal_12/
-                    > more_than_12/
+                > _lower_or_equal_8/
+                    > 5f4dcc3b5aa765d61d8327deb882cf99 -> ../5f/4d/5f4dcc3b5aa765d61d8327deb882cf99
+                > _lower_or_equal_10/
+                > _lower_or_equal_12/
+                > _more_than_12/
+                    > 90282e03043af181c985c9891c52c00f -> ../90/28/90282e03043af181c985c9891c52c00f
                 > 5f/4d/
-                    > lower_or_equal_8/
-                        > 5f4dcc3b5aa765d61d8327deb882cf99/
-                            > 5f4dcc3b5aa765d61d8327deb882cf99.md5 << b64:cGFzc3dvcmQ=
-                            > links/
-                                > 20bacbe5082d09eb3ac96a4565c1dc33 -> ../../../../../email/20/ba/20bacbe5082d09eb3ac96a4565c1dc33
-                            > logs/
-                                import.log << 5f4dcc3b5aa765d61d8327deb882cf99 2020-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
-                                import.log.1    # Old logs
-                    > lower_or_equal_10/
-                    > lower_or_equal_12/
-                    > more_than_12/
+                    > 5f4dcc3b5aa765d61d8327deb882cf99/
+                        > 5f4dcc3b5aa765d61d8327deb882cf99.md5 << b64:cGFzc3dvcmQ=
+                        > links/
+                            > 20bacbe5082d09eb3ac96a4565c1dc33 -> ../../../../../email/20/ba/20bacbe5082d09eb3ac96a4565c1dc33
+                        > logs/
+                            import.log << 5f4dcc3b5aa765d61d8327deb882cf99 2020-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
+                            import.log.1    # Old logs
                 > 90/28/
-                    > lower_or_equal_8/
-                    > lower_or_equal_10/
-                    > lower_or_equal_12/
-                    > more_than_12/
-                        > 90282e03043af181c985c9891c52c00f/
-                            > 90282e03043af181c985c9891c52c00f.md5 << b64:YW5hd2Vzb21lcGFzc3dvcmQ=
-                            > links/
-                                > 26af7d285fa312aa2f8d3857d0f00af4 -> ../../../../../email/26/af/26af7d285fa312aa2f8d3857d0f00af4
-                            > logs/
-                                import.log << 90282e03043af181c985c9891c52c00f 2020-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
-                                import.log.1    # Old logs
+                    > 90282e03043af181c985c9891c52c00f/
+                        > 90282e03043af181c985c9891c52c00f.md5 << b64:YW5hd2Vzb21lcGFzc3dvcmQ=
+                        > links/
+                            > 26af7d285fa312aa2f8d3857d0f00af4 -> ../../../../../email/26/af/26af7d285fa312aa2f8d3857d0f00af4
+                        > logs/
+                            import.log << 90282e03043af181c985c9891c52c00f 2020-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
+                            import.log.1    # Old logs
                 > xx/xx/
-                    > lower_or_equal_8/
-                    > lower_or_equal_10/
-                    > lower_or_equal_12/
-                    > more_than_12/
+                
         > file
             > xx/xx/
             > 99/22/
