@@ -5,6 +5,7 @@
 #include "lib/CLI11.hpp"
 
 #include "HaDB.h"
+#include "HaUtils.h"
 #include "Log.h"
 
 int main(int argc, char** argv) {
@@ -49,8 +50,13 @@ int main(int argc, char** argv) {
 
     std::string dt;
     std::string search_string;
-    queryOpt->add_option("dataclass", dt, "You string to look for in database' data");
-    queryOpt->add_option("searchString", search_string, "You string to look for in database' data");
+    queryOpt->add_option("dataclass", dt, "You string to look for in database' data")->required();
+    queryOpt->add_option("searchString", search_string, "You string to look for in database' data")->required();
+
+    /** Get heuristics for data optimal repartition based on string length on each line **/
+    CLI::App* strLengthRepartSub = app.add_subcommand("analyze", "Get quartiles required for data organization optimization based on string length");
+    std::string sample_file_path;
+    strLengthRepartSub->add_option("-i,--input", sample_file_path, "Sample file to laod. Each sample data MUST be on a single line")->required();
 
     try {
         app.parse(argc, argv);
@@ -112,6 +118,11 @@ int main(int argc, char** argv) {
             task_uuid = db.query(dt, search_string, HaDB::MATCH_TYPE::EXACT);
 
         printf("%s\n",task_uuid.c_str());
+    }
+    else if(app.got_subcommand("analyze"))
+    {
+        std::map<std::string, int> quartiles = get_string_optimal_repartition_quartile(sample_file_path);
+        printf("%d\n%d\n%d\n", quartiles["q1"], quartiles["med"], quartiles["q3"]);
     }
     else
     {
