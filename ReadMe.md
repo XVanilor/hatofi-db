@@ -57,10 +57,6 @@ Desired filesystem output architecture:
                     > 26af7d285fa312aa2f8d3857d0f00af4 -> ../26/af/26af7d285fa312aa2f8d3857d0f00af4
                     > ae68135e4f74eed19a79fd982c7c4f98 -> ../ae/68/ae68135e4f74eed19a79fd982c7c4f98
                 > xx/xx/
-                    > lower_or_equal_8/
-                    > lower_or_equal_10/
-                    > lower_or_equal_12/
-                    > more_than_12/
                 > 1e/77/
                     > 1e77fd2c7a59f06a6c8dc8ace3ebf221/
                         > 1e77fd2c7a59f06a6c8dc8ace3ebf221.md5 << b64:ZGF0YTNAZW1haWwuY29t
@@ -91,10 +87,6 @@ Desired filesystem output architecture:
                             import.log << ae68135e4f74eed19a79fd982c7c4f98 2022-01-01 693ad1be-c353-4562-b12a-930f2ed43b79
                             import.log.1    # Old logs
                 > xx/xx/
-                    > lower_or_equal_8/
-                    > lower_or_equal_10/
-                    > lower_or_equal_12/
-                    > more_than_12/
             > password/
                 > _lower_or_equal_8/
                     > 5f4dcc3b5aa765d61d8327deb882cf99 -> ../5f/4d/5f4dcc3b5aa765d61d8327deb882cf99
