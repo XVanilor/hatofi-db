@@ -121,8 +121,8 @@ int main(int argc, char** argv) {
     }
     else if(app.got_subcommand("analyze"))
     {
-        std::map<std::string, int> quartiles = get_string_optimal_repartition_quartile(sample_file_path);
-        printf("%d\n%d\n%d\n", quartiles["q1"], quartiles["med"], quartiles["q3"]);
+        StringRepartitionQuartiles* quartiles = get_string_optimal_repartition_quartile(sample_file_path);
+        printf("%f\n%f\n%f\n", quartiles->q1, quartiles->med, quartiles->q3);
     }
     else
     {

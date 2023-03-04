@@ -8,10 +8,16 @@
 #include <sys/stat.h>
 #include <cmath>
 #include <fstream>
-#include <utility>
 #include <iostream>
 
 #include "HaUtils.h"
+
+StringRepartitionQuartiles::StringRepartitionQuartiles(const double& q1, const double& med, const double& q3)
+{
+    this->q1 = q1;
+    this->med = med;
+    this->q3 = q3;
+}
 
 bool isResourceNameValid(const std::string &resourceName) {
     std::string pattern = "^[a-zA-Z0-9_-]{1,255}$";
@@ -174,7 +180,7 @@ std::vector<std::string> get_sample_file_content(const std::string& file_path)
     return samples;
 }
 
-std::map<std::string, int> get_string_optimal_repartition_quartile(const std::string& file_path)
+StringRepartitionQuartiles* get_string_optimal_repartition_quartile(const std::string& file_path)
 {
 
     std::vector<std::string> samples = get_sample_file_content(file_path);
@@ -185,5 +191,5 @@ std::map<std::string, int> get_string_optimal_repartition_quartile(const std::st
 
     sort(string_lengths.begin(), string_lengths.end());
     auto quartiles = Quantile<double>(string_lengths, { 0.25, 0.5, 0.75 });
-    return {{"q1", quartiles[0]}, {"med", quartiles[1]}, {"q3", quartiles[2]}};
+    return new StringRepartitionQuartiles(quartiles[0], quartiles[1], quartiles[2]);
 }
