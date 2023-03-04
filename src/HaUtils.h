@@ -11,11 +11,20 @@
 class StringRepartitionQuartiles {
 
 public:
-    StringRepartitionQuartiles(const double& q1, const double& med, const double& q3);
+    StringRepartitionQuartiles(const unsigned int& q1, const unsigned int& q2, const unsigned int& q3);
 
-    double q1{};
-    double med{};
-    double q3{};
+    unsigned int q1{};
+    unsigned int q2{};
+    unsigned int q3{};
+};
+
+/**
+ * @see https://stackoverflow.com/a/36851059
+ */
+class NotImplemented : public std::logic_error
+{
+public:
+    NotImplemented() : std::logic_error("Function not yet implemented") { };
 };
 
 bool isResourceNameValid(const std::string& resourceName);
@@ -27,6 +36,8 @@ std::string currentDate(const std::string& format);
 std::string exec(const std::string& cmd);
 bool is_number(const std::string& s);
 bool is_valid_uuid(const std::string& s);
+unsigned int getRawDataLengthFromBase64(std::string base64_in);
+std::string getStringDistribFolderNameForLen(unsigned int len, StringRepartitionQuartiles* ref);
 template<typename T>
 static inline double Lerp(T v0, T v1, T t);
 template<typename T>

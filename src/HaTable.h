@@ -7,11 +7,14 @@
 
 #include <string>
 
+#include "HaUtils.h"
+
 class HaTable {
 
 public:
     int maxDepth = 2;
     int bytesPerDepth = 2;
+    StringRepartitionQuartiles* quartiles = nullptr;
 
     explicit HaTable(const std::string& newName);
     HaTable* setName(const std::string& newName);
@@ -22,8 +25,7 @@ public:
     bool del();
 
 private:
-    void createDirectoryLevel(const std::string& parentDir, int currentDepth, int maxDepth);
-
+    void createDirectoryLevel(const std::string& parentDir, int currentDepth, int maxDirDepth);
 private:
     std::string tableName;
 

@@ -12,10 +12,10 @@
 
 #include "HaUtils.h"
 
-StringRepartitionQuartiles::StringRepartitionQuartiles(const double& q1, const double& med, const double& q3)
+StringRepartitionQuartiles::StringRepartitionQuartiles(const unsigned int& q1, const unsigned int& q2, const unsigned int& q3)
 {
     this->q1 = q1;
-    this->med = med;
+    this->q2 = q2;
     this->q3 = q3;
 }
 
@@ -115,6 +115,24 @@ bool is_valid_uuid(const std::string &s) {
     return regex_match(s, e);
 }
 
+unsigned int getRawDataLengthFromBase64(std::string base64_in)
+{
+    return (3 * base64_in.size() / 4) - std::count(base64_in.begin(), base64_in.end(), '=');
+}
+
+std::string getStringDistribFolderNameForLen(unsigned int len, StringRepartitionQuartiles* ref)
+{
+    if(len <= ref->q1)
+        return "_lower_or_equal_than_"+std::to_string(ref->q1);
+    else if(len > ref->q1 && len <= ref->q2)
+        return "_lower_or_equal_than_"+std::to_string(ref->q2);
+    else if(len > ref->q2 && len <= ref->q3)
+        return "_lower_or_equal_than_"+std::to_string(ref->q3);
+    else
+        // rawStrLen is > q3
+        return "_more_than_"+std::to_string(ref->q3);
+}
+
 template<typename T>
 static inline double Lerp(T v0, T v1, T t)
 {
@@ -191,5 +209,5 @@ StringRepartitionQuartiles* get_string_optimal_repartition_quartile(const std::s
 
     sort(string_lengths.begin(), string_lengths.end());
     auto quartiles = Quantile<double>(string_lengths, { 0.25, 0.5, 0.75 });
-    return new StringRepartitionQuartiles(quartiles[0], quartiles[1], quartiles[2]);
+    return new StringRepartitionQuartiles(int(quartiles[0]), int(quartiles[1]), int(quartiles[2]));
 }
