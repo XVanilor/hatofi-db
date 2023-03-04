@@ -34,9 +34,9 @@ email:26af7d285fa312aa2f8d3857d0f00af4:password:YW5hd2Vzb21lcGFzc3dvcmQ=:90282e0
 
 ```bash
 $ md5sum input.txt 
-8998c19bb14b9af66ccdc79bed5818c4  input.txt
+3dca08a5fb0b47ae9a09e35c4fad9dbf  input.txt
 $ sha256sum input.txt
-99226b116e370a25130cce7e55fe3f813a0f3168c30e584de422e9f43b76fc1a input.txt
+9976ed3c6a2c2ced0002f2ffcbc4bb6bcaa6a653cd7f15846e187664e97159a2 input.txt
 ```
 
 ## Output Format
