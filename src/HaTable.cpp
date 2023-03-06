@@ -38,21 +38,12 @@ bool HaTable::publish(const std::string& rootFs)
     // Create directory architecture
     createDirectoryLevel(tableRootDir, 1, this->maxDepth);
 
-    // Create .table file
-    /* @TODO use YAML structure
-
-     [Table]
-     name=xxx
-     maxDepth=xxx
-     bytesPerDepth=xxx
-     */
-
     return true;
 }
 
 void HaTable::createDirectoryLevel(const std::string& parentDir, int currentDepth, int maxDirDepth)
 {
-    // Create subfolder
+    // Create subfolders
     for (int j = 0; j < pow(16, this->bytesPerDepth); j++) {
 
         std::string i_str = toHex(j);
@@ -70,7 +61,7 @@ void HaTable::createDirectoryLevel(const std::string& parentDir, int currentDept
 }
 
 bool HaTable::del() {
-    return false;
+    throw NotImplemented();
 }
 
 HaTable* HaTable::setNS(const std::string &newNs) {

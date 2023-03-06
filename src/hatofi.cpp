@@ -5,6 +5,7 @@
 #include "lib/CLI11.hpp"
 
 #include "HaDB.h"
+#include "HaUtils.h"
 #include "Log.h"
 
 int main(int argc, char** argv) {
@@ -49,8 +50,8 @@ int main(int argc, char** argv) {
 
     std::string dt;
     std::string search_string;
-    queryOpt->add_option("dataclass", dt, "You string to look for in database' data");
-    queryOpt->add_option("searchString", search_string, "You string to look for in database' data");
+    queryOpt->add_option("dataclass", dt, "You string to look for in database' data")->required();
+    queryOpt->add_option("searchString", search_string, "You string to look for in database' data")->required();
 
     try {
         app.parse(argc, argv);
@@ -68,7 +69,10 @@ int main(int argc, char** argv) {
     if(!show_version)
         printf("Data directory: %s\n", real_data_dir);
 
-    HaDB db = HaDB(real_data_dir);
+    HaDB* db = new HaDB(real_data_dir);
+    // Config was already generated in this directory and is an active HatofiDB instance
+    if(std::filesystem::exists(std::string(real_data_dir) + "/.dbmeta"))
+        db->loadConfig(std::string(real_data_dir) + "/.dbmeta");
 
     if(show_version)
     {
@@ -80,7 +84,9 @@ int main(int argc, char** argv) {
     else if(app.got_subcommand("gen"))
     {
         log_info("Loading configuration...");
-        db.fromConfig(config_file);
+        db = new HaDB(real_data_dir);
+        db->loadConfig(config_file);
+        db->publish();
         log_info("Configuration successfully loaded");
     }
     else if(app.got_subcommand("load"))
@@ -88,7 +94,7 @@ int main(int argc, char** argv) {
         try {
 
             log_info("Loading data...");
-            db.load(file_loaded, force_file_load);
+            db->load(file_loaded, force_file_load);
             log_info("Data loaded successfully");
 
         } catch (const std::invalid_argument& e)
@@ -107,9 +113,9 @@ int main(int argc, char** argv) {
     {
         std::string task_uuid;
         if (queryPartialMatch)
-            task_uuid = db.query(dt, search_string, HaDB::MATCH_TYPE::PARTIAL);
+            task_uuid = db->query(dt, search_string, HaDB::MATCH_TYPE::PARTIAL);
         else
-            task_uuid = db.query(dt, search_string, HaDB::MATCH_TYPE::EXACT);
+            task_uuid = db->query(dt, search_string, HaDB::MATCH_TYPE::EXACT);
 
         printf("%s\n",task_uuid.c_str());
     }

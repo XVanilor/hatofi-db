@@ -66,7 +66,7 @@ std::vector<HaTable*> HaDB::getTables() {
     return this->tables;
 }
 
-HaDB* HaDB::fromConfig(const std::string &configFile) {
+HaDB* HaDB::loadConfig(const std::string &configFile) {
     std::ifstream ifs(configFile);
 
     std::string currentSectionName;
@@ -99,12 +99,6 @@ HaDB* HaDB::fromConfig(const std::string &configFile) {
                     tablesLoaded++;
                     continue;
                 }
-
-                // Load table into HaDB
-                if(currentTable->maxDepth == 2)
-                    log_info(currentTable->getName()+" table maxDepth: 2 (default)");
-                if(currentTable->bytesPerDepth == 2)
-                    log_info(currentTable->getName()+" table bytesPerDepth: 2 (default)");
 
                 this->addTable(currentTable);
                 currentTable = new HaTable("default");
@@ -159,6 +153,39 @@ HaDB* HaDB::fromConfig(const std::string &configFile) {
                     }
                     currentTable->maxDepth = std::stoi(value);
                 }
+                else if(key == "q1")
+                {
+                    if(!is_number(value))
+                    {
+                        throw std::invalid_argument("Invalid config file at line "+std::to_string(i)+": q1 must be an integer");
+                    }
+                    double q1 = std::stoi(value);
+                    if(currentTable->quartiles == nullptr)
+                        currentTable->quartiles = new StringRepartitionQuartiles(q1, q1, q1 + 1);
+                    currentTable->quartiles->q1 = q1;
+                }
+                else if(key == "q2")
+                {
+                    if(!is_number(value))
+                    {
+                        throw std::invalid_argument("Invalid config file at line "+std::to_string(i)+": q2 must be an integer");
+                    }
+                    double q2 = std::stoi(value);
+                    if(currentTable->quartiles == nullptr)
+                        currentTable->quartiles = new StringRepartitionQuartiles(q2, q2, q2 + 1);
+                    currentTable->quartiles->q2 = q2;
+                }
+                else if(key == "q3")
+                {
+                    if(!is_number(value))
+                    {
+                        throw std::invalid_argument("Invalid config file at line "+std::to_string(i)+": q3 must be an integer");
+                    }
+                    double q3 = std::stoi(value);
+                    if(currentTable->quartiles == nullptr)
+                        currentTable->quartiles = new StringRepartitionQuartiles(q3 - 1, q3 - 1, q3);
+                    currentTable->quartiles->q3 = q3;
+                }
             }
             // Unknown. Throws error
             else
@@ -175,16 +202,10 @@ HaDB* HaDB::fromConfig(const std::string &configFile) {
     // Load last table
     if(tablesLoaded > 0)
     {
-        // Load table into HaDB
-        if(currentTable->maxDepth == 2)
-            log_info(currentTable->getName()+" table maxDepth: 2 (default)");
-        if(currentTable->bytesPerDepth == 2)
-            log_info(currentTable->getName()+" table bytesPerDepth: 2 (default)");
         this->addTable(currentTable);
     }
 
     ifs.close();
-    this->publish();
 
     return this;
 }
@@ -198,7 +219,7 @@ void HaDB::publish() {
     configFile << "name="+this->dbName+"\n";
 
     // Create tables
-    for(HaTable* t : tables)
+    for(HaTable* t : this->tables)
     {
         log_info("Making "+t->getName()+"...");
 
@@ -207,11 +228,23 @@ void HaDB::publish() {
         configFile << "name="+t->getName()+"\n";
         configFile << "maxDepth="+std::to_string(t->maxDepth)+"\n";
         configFile << "bytesPerDepth="+std::to_string(t->bytesPerDepth)+"\n";
+        if(t->quartiles != nullptr)
+        {
+            configFile << "q1="+std::to_string(t->quartiles->q1)+"\n";
+            configFile << "q2="+std::to_string(t->quartiles->q2)+"\n";
+            configFile << "q3="+std::to_string(t->quartiles->q3)+"\n";
+        }
 
         if(dirExists(this->getRoot() + "/" + t->getName()))
         {
-            log_warn("Table "+t->getName()+" already exists");
+            log_warn("Table "+t->getName()+" already exists and will be overwrite");
         }
+
+        // Load table into HaDB
+        if(t->maxDepth == 2)
+            log_info(t->getName()+" table maxDepth: 2 (default)");
+        if(t->bytesPerDepth == 2)
+            log_info(t->getName()+" table bytesPerDepth: 2 (default)");
 
         t->publish(this->getRoot());
     }
@@ -249,10 +282,10 @@ void HaDB::load(const std::string& file, bool force = false)
     std::string inputFileMd5 = exec("md5sum '"+file+"' | cut -d' ' -f1");
     std::string inputFileSha256 = exec("sha256sum '"+file+"' | cut -d' ' -f1");
     std::string fileRegisterFileName = fmt::format("{}/file/{}/{}/{}.sha256",
-                                              this->getRoot(),
-                                              inputFileSha256.substr(0,2),
-                                              inputFileSha256.substr(2,2),
-                                              inputFileSha256
+                                                  this->getRoot(),
+                                                  inputFileSha256.substr(0,2),
+                                                  inputFileSha256.substr(2,2),
+                                                  inputFileSha256
                                               );
 
     // Check if file was already registered
@@ -287,23 +320,95 @@ void HaDB::load(const std::string& file, bool force = false)
                            );
     fileOut.close();
 
+    // Get quartiles for each dataclasses
+    std::map<std::string, StringRepartitionQuartiles*> dtToQuartiles;
+    for(HaTable* t : this->tables)
+    {
+        dtToQuartiles.insert(std::pair<std::string, StringRepartitionQuartiles*>(t->getName(), t->quartiles));
+    }
+
     while(std::getline(ifs, line))
     {
         std::ofstream dataOutFile;
-        std::ofstream entityOutFile;
+        std::ofstream logFile;
 
         // Data splitting
         std::vector<std::string> columns = tokenize(line, ":");
+        std::string keyDt = columns[0];
+        std::string keyMD5 = columns[1];
+        std::string dt = columns[2];
+        std::string dataMD5 = columns[4];
 
-        std::string dataOutFileName = fmt::format("{}/dataclass/{}/{}/{}/{}.md5", this->getRoot(), columns[1], columns[3].substr(0,2), columns[3].substr(2,2),columns[3]);
-        dataOutFile.open(dataOutFileName);
-        dataOutFile << fmt::format("b64:{}\n", columns[2]);
-        dataOutFile.close();
+        std::string entryAbsLoc = fmt::format("{}/dataclass/{}/{}/{}/{}",
+                                              this->getRoot(),
+                                              dt,
+                                              dataMD5.substr(0,2),
+                                              dataMD5.substr(2,2),
+                                              dataMD5
+                                              );
+        std::string keyAbsLoc = fmt::format("{}/dataclass/{}/{}/{}/{}",
+                                              this->getRoot(),
+                                              keyDt,
+                                              keyMD5.substr(0,2),
+                                              keyMD5.substr(2,2),
+                                              keyMD5
+        );
+        // Create Entry folder architecture if it does not exist yet
+        if(!std::filesystem::exists(entryAbsLoc))
+        {
+            std::filesystem::create_directory(entryAbsLoc);
 
-        std::string entityOutFileName = fmt::format("{}/entity/{}/{}/{}.md5", this->getRoot(), columns[0].substr(0,2), columns[0].substr(2,2),columns[0]);
-        entityOutFile.open(entityOutFileName, std::ios_base::app); // append instead of overwrite
-        entityOutFile << fmt::format("{} {} {}\n", columns[3], curDate, leakUuid);
-        entityOutFile.close();
+            // Put data definition into folder if not created yet
+            std::string dataOutFileName = fmt::format("{}/{}.md5", entryAbsLoc, dataMD5);
+            dataOutFile.open(dataOutFileName);
+            dataOutFile << fmt::format("md5:{}\n", dataMD5);
+            dataOutFile.close();
+
+            // Create links/ and logs/ subdirectory
+            std::filesystem::create_directory(entryAbsLoc + "/links");
+            std::filesystem::create_directory(entryAbsLoc + "/logs");
+        }
+
+        // Register entry log to acknowledge to we saw it
+        // @TODO Handle log rotation
+        std::string logFileName = fmt::format("{}/logs/import.log", entryAbsLoc);
+        logFile.open(logFileName);
+        logFile << dataMD5 + " " + curDate + " " + leakUuid + "\n";
+        logFile.close();
+
+        // Create bidirectional symlink only if it does not point to current data
+        if(keyMD5 == dataMD5)
+            continue;
+
+        std::string keyRelativeLocation = fmt::format("../../../../../{}/{}/{}/{}",
+                                                        keyDt,
+                                                        keyMD5.substr(0,2),
+                                                        keyMD5.substr(2, 2),
+                                                        keyMD5
+                                                    );
+        std::string dataRelativeLocation = fmt::format("../../../../../{}/{}/{}/{}",
+                                                        dt,
+                                                        dataMD5.substr(0,2),
+                                                        dataMD5.substr(2,2),
+                                                        dataMD5
+                                                    );
+        try {
+            // Create key to entry symlink
+            std::filesystem::create_directory_symlink(dataRelativeLocation, keyAbsLoc + "/links/" + dataMD5);
+        } catch (std::filesystem::filesystem_error& error)
+        {
+            log_warn(error.what());
+            // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
+        }
+        try {
+            // Create entry to key symlink
+            std::filesystem::create_directory_symlink(keyRelativeLocation, entryAbsLoc + "/links/" + keyMD5);
+        } catch (std::filesystem::filesystem_error& error)
+        {
+            // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
+            log_warn(error.what());
+        }
+
     }
 
     // Confirm file loading completeness

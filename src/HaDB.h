@@ -26,7 +26,7 @@ public:
     void setRoot(const std::string& fsRoot);
     std::string getRoot();
 
-    HaDB* fromConfig(const std::string& configFile);
+    HaDB* loadConfig(const std::string& configFile);
     void publish();
 
     HaTable* addTable(HaTable* newTable);
