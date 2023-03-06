@@ -337,9 +337,7 @@ void HaDB::load(const std::string& file, bool force = false)
         std::string keyDt = columns[0];
         std::string keyMD5 = columns[1];
         std::string dt = columns[2];
-        std::string dataBase64 = columns[3];
         std::string dataMD5 = columns[4];
-        std::string dataStrDistribFolderName;
 
         std::string entryAbsLoc = fmt::format("{}/dataclass/{}/{}/{}/{}",
                                               this->getRoot(),
@@ -363,27 +361,12 @@ void HaDB::load(const std::string& file, bool force = false)
             // Put data definition into folder if not created yet
             std::string dataOutFileName = fmt::format("{}/{}.md5", entryAbsLoc, dataMD5);
             dataOutFile.open(dataOutFileName);
-            dataOutFile << fmt::format("b64:{}\n", dataBase64);
+            dataOutFile << fmt::format("md5:{}\n", dataMD5);
             dataOutFile.close();
 
             // Create links/ and logs/ subdirectory
             std::filesystem::create_directory(entryAbsLoc + "/links");
             std::filesystem::create_directory(entryAbsLoc + "/logs");
-
-            // Create data length indexation with symlink
-            try {
-                StringRepartitionQuartiles* quartiles = dtToQuartiles[dt];
-                dataStrDistribFolderName = getStringDistribFolderNameForLen(getRawDataLengthFromBase64(dataBase64), quartiles);
-                std::filesystem::create_directory_symlink(
-                        fmt::format("../{}/{}/{}", dataMD5.substr(0,2), dataMD5.substr(2,2), dataMD5),
-                        fmt::format("{}/dataclass/{}/{}/{}", this->getRoot(), dt, dataStrDistribFolderName, dataMD5)
-                );
-
-            } catch(const std::out_of_range &e) {
-
-                log_warn(fmt::format("Dataclass `{}` is not created nor supported by this instance of hatofi. Please create it", dt));
-                continue;
-            }
         }
 
         // Register entry log to acknowledge to we saw it
@@ -398,16 +381,16 @@ void HaDB::load(const std::string& file, bool force = false)
             continue;
 
         std::string keyRelativeLocation = fmt::format("../../../../../{}/{}/{}/{}",
-                                                    keyDt,
-                                                    keyMD5.substr(0,2),
-                                                    keyMD5.substr(2, 2),
-                                                    keyMD5
+                                                        keyDt,
+                                                        keyMD5.substr(0,2),
+                                                        keyMD5.substr(2, 2),
+                                                        keyMD5
                                                     );
         std::string dataRelativeLocation = fmt::format("../../../../../{}/{}/{}/{}",
-                                                    dt,
-                                                    dataMD5.substr(0,2),
-                                                    dataMD5.substr(2,2),
-                                                    dataMD5
+                                                        dt,
+                                                        dataMD5.substr(0,2),
+                                                        dataMD5.substr(2,2),
+                                                        dataMD5
                                                     );
         try {
             // Create key to entry symlink

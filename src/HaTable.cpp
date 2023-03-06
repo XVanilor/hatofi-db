@@ -43,19 +43,6 @@ bool HaTable::publish(const std::string& rootFs)
 
 void HaTable::createDirectoryLevel(const std::string& parentDir, int currentDepth, int maxDirDepth)
 {
-    // At first depth level, build string distribution
-    if(currentDepth == 1 && this->quartiles != nullptr)
-    {
-        // Create lower_or_equal_than_q1
-        std::filesystem::create_directory(parentDir + "/_lower_or_equal_than_" + std::to_string(this->quartiles->q1));
-        // Create lower_or_equal_than_q2
-        std::filesystem::create_directory(parentDir + "/_lower_or_equal_than_" + std::to_string(this->quartiles->q2));
-        // Create lower_or_equal_than_q3
-        std::filesystem::create_directory(parentDir + "/_lower_or_equal_than_" + std::to_string(this->quartiles->q3));
-        // Create more_than_q3
-        std::filesystem::create_directory(parentDir + "/_more_than_" + std::to_string(this->quartiles->q3));
-    }
-
     // Create subfolders
     for (int j = 0; j < pow(16, this->bytesPerDepth); j++) {
 
