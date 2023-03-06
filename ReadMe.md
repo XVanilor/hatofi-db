@@ -9,7 +9,6 @@ Hatofi, stands for "Hashmap to Filesystem" is a key-value database running on Li
 - Database creation via config file via `hatofi --data_directory <data_dir> gen --config <config_file.txt>`
 - Import data using `hatofi --data_directory <data_dir> load --input <input.txt>`
 - Query data (partial or exact match) using `hatofi --data_directory <data_dir> query [--exact|--partial] <your_search>`
-- Evaluate optimum quartile distribution of data based on their length on a given sample (100 values minimum is recommended) with `hatofi optimize --input <sample.txt>`
 
 ## Input Format
 
