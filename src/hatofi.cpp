@@ -10,7 +10,7 @@
 
 int main(int argc, char** argv) {
 
-    const std::string BUILD_VERSION = "1.1.1";
+    const std::string BUILD_VERSION = "2.1.1";
 
     /** Application init **/
     CLI::App app{"HatofiDB - Hashmap To Filesystem Database\n    > Created by Matthieu \"Vanilor\" Herbette\n    > Find the repo at https://github.com/XVanilor/hatofi-db/\n"};
