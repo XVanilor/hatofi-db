@@ -45,6 +45,12 @@ int main(int argc, char** argv) {
     auto partialFlagOpt = queryOpt->add_flag("-p,--partial", queryPartialMatch, "Search for partial match in base64 data (may be slower than exact match)");
     auto exactFlagOpt = queryOpt->add_flag("-e,--exact", queryExactMatch,"Search for exact and full string (performs hash search)");
 
+    CLI::App* queryLinksApp = querySub->add_subcommand("links", "Get linked data hashes");
+    std::string queryLinksData;
+    queryLinksApp->add_option("searchMD5", queryLinksData, "Data to get links from")->required();
+
+    querySub->add_subcommand("logs", "Get data import logs");
+
     partialFlagOpt->excludes(exactFlagOpt);
     exactFlagOpt->excludes(partialFlagOpt);
 
@@ -111,13 +117,21 @@ int main(int argc, char** argv) {
 
     else if(app.got_subcommand("query"))
     {
-        std::string task_uuid;
-        if (queryPartialMatch)
-            task_uuid = db->query(dt, search_string, HaDB::MATCH_TYPE::PARTIAL);
-        else
-            task_uuid = db->query(dt, search_string, HaDB::MATCH_TYPE::EXACT);
 
-        printf("%s\n",task_uuid.c_str());
+        if(querySub->got_subcommand("links"))
+        {
+            for (const auto & entry : db->getDataLinks(queryLinksData))
+                std::cout << entry.path().filename().string() << std::endl;
+            return 0;
+        }
+
+        std::string result;
+        if (queryPartialMatch)
+            result = db->query(dt, search_string, HaDB::MATCH_TYPE::PARTIAL);
+        else
+            result = db->query(dt, search_string, HaDB::MATCH_TYPE::EXACT);
+
+        printf("%s\n",result.c_str());
     }
     else
     {

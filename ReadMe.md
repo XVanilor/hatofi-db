@@ -9,7 +9,7 @@ Hatofi, stands for "Hashmap to Filesystem" is a key-value database running on Li
 - Database creation via config file via `hatofi --data_directory <data_dir> gen --config <config_file.txt>`
 - Import data using `hatofi --data_directory <data_dir> load --input <input.txt>`
 - Query data (partial or exact match) using `hatofi --data_directory <data_dir> query [--exact|--partial] <your_search>`
-
+- Get linked data with `hatofi --data-directory <data_dir> query links <data_md5>`
 ## Input Format
 
 Input file format:

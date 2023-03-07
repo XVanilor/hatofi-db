@@ -320,13 +320,6 @@ void HaDB::load(const std::string& file, bool force = false)
                            );
     fileOut.close();
 
-    // Get quartiles for each dataclasses
-    std::map<std::string, StringRepartitionQuartiles*> dtToQuartiles;
-    for(HaTable* t : this->tables)
-    {
-        dtToQuartiles.insert(std::pair<std::string, StringRepartitionQuartiles*>(t->getName(), t->quartiles));
-    }
-
     while(std::getline(ifs, line))
     {
         std::ofstream dataOutFile;
@@ -496,10 +489,10 @@ std::string HaDB::query(const std::string& dataclass, std::string searchString, 
         std::string root2 = searchHash.substr(2,2);
 
         // File path
-        std::string fPath = searchPath + "/" + root1 + "/" + root2 + "/" + searchHash + ".md5";
+        std::string fPath = searchPath + "/" + root1 + "/" + root2 + "/" + searchHash + "/" + searchHash + ".md5";
         std::string resPath = "/tmp/"+task_uuid+".0.txt";
 
-        std::string cmd0 = "cat '"+fPath+"' > '"+resPath+"' &";
+        std::string cmd0 = "cat '"+fPath+"'";
 
         if(!std::filesystem::exists(fPath))
         {
@@ -511,4 +504,23 @@ std::string HaDB::query(const std::string& dataclass, std::string searchString, 
         system(cmd0.c_str());
     }
     return task_uuid;
+}
+
+std::filesystem::directory_iterator HaDB::getDataLinks(std::string md5Hash)
+{
+
+    std::string root1 = md5Hash.substr(0,2);
+    std::string root2 = md5Hash.substr(2,2);
+    // Data path
+    std::string dataPath = this->getRoot() + "/" + root1 + "/" + root2 + "/" + md5Hash;
+
+    if(!std::filesystem::exists(dataPath))
+    {
+        std::cout << "Data does not exits" << std::endl;
+        return {};
+    }
+
+    return std::filesystem::directory_iterator(dataPath + "/links");
+
+
 }

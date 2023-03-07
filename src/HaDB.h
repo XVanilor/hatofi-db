@@ -36,6 +36,7 @@ public:
 
     void load(const std::string& file, bool force);
     std::string query(const std::string& dataclass, std::string searchString, MATCH_TYPE matchType);
+    std::filesystem::directory_iterator getDataLinks(std::string md5Hash);
 
 private:
     std::string dbName;
