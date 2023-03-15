@@ -28,6 +28,15 @@ std::string HaTable::getName() {
     return this->tableName;
 }
 
+std::string HaTable::getFullName() {
+
+    if(this->ns.empty())
+        return this->getName();
+
+    std::replace(this->ns.begin(), this->ns.end(), '.', '/');
+    return this->ns + '/' + this->tableName;
+}
+
 bool HaTable::publish(const std::string& rootFs)
 {
     // Create table structure

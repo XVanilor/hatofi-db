@@ -19,6 +19,7 @@ public:
     explicit HaTable(const std::string& newName);
     HaTable* setName(const std::string& newName);
     std::string getName();
+    std::string getFullName();
     HaTable* setNS(const std::string& newNs);
     std::string getNS();
     bool publish(const std::string& rootFs);

@@ -221,7 +221,7 @@ void HaDB::publish() {
     // Create tables
     for(HaTable* t : this->tables)
     {
-        if(dirExists(this->getRoot() + "/" + t->getName()))
+        if(dirExists(this->getRoot() + "/" + t->getFullName()))
         {
             log_warn("Table "+t->getName()+" already exists and will not be overwrite");
             continue;
