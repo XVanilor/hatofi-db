@@ -221,6 +221,12 @@ void HaDB::publish() {
     // Create tables
     for(HaTable* t : this->tables)
     {
+        if(dirExists(this->getRoot() + "/" + t->getName()))
+        {
+            log_warn("Table "+t->getName()+" already exists and will not be overwrite");
+            continue;
+        }
+
         log_info("Making "+t->getName()+"...");
 
         configFile << "[table]\n";
@@ -233,11 +239,6 @@ void HaDB::publish() {
             configFile << "q1="+std::to_string(t->quartiles->q1)+"\n";
             configFile << "q2="+std::to_string(t->quartiles->q2)+"\n";
             configFile << "q3="+std::to_string(t->quartiles->q3)+"\n";
-        }
-
-        if(dirExists(this->getRoot() + "/" + t->getName()))
-        {
-            log_warn("Table "+t->getName()+" already exists and will be overwrite");
         }
 
         // Load table into HaDB
@@ -331,6 +332,12 @@ void HaDB::load(const std::string& file, bool force = false)
         std::string keyMD5 = columns[1];
         std::string dt = columns[2];
         std::string dataMD5 = columns[4];
+
+        if(!std::filesystem::exists(fmt::format("{}/dataclass/{}", this->getRoot(), dt)))
+        {
+            log_warn("Dataclass `"+dt+"` does not exist");
+            continue;
+        }
 
         std::string entryAbsLoc = fmt::format("{}/dataclass/{}/{}/{}/{}",
                                               this->getRoot(),
