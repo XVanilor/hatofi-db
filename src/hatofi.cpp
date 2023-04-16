@@ -10,7 +10,7 @@
 
 int main(int argc, char** argv) {
 
-    const std::string BUILD_VERSION = "2.1.2.1";
+    const std::string BUILD_VERSION = "2.1.3";
 
     /** Application init **/
     CLI::App app{"HatofiDB - Hashmap To Filesystem Database\n    > Created by Matthieu \"Vanilor\" Herbette\n    > Find the repo at https://github.com/XVanilor/hatofi-db/\n"};
@@ -37,27 +37,23 @@ int main(int argc, char** argv) {
     loadSub->add_flag("-f,--force", force_file_load, "Force file to be loaded in case of conflict");
 
     /** Data Query */
-    CLI::App* querySub = app.add_subcommand("query", "Query data (exact or partial) from Hatofi DB");
-    CLI::App* queryOpt = querySub->add_option_group("search_type");
-
-    bool queryPartialMatch{false};
-    bool queryExactMatch{true}; // Default is full-exact search because it's faster
-    auto partialFlagOpt = queryOpt->add_flag("-p,--partial", queryPartialMatch, "Search for partial match in base64 data (may be slower than exact match)");
-    auto exactFlagOpt = queryOpt->add_flag("-e,--exact", queryExactMatch,"Search for exact and full string (performs hash search)");
-
-    CLI::App* queryLinksApp = querySub->add_subcommand("links", "Get linked data hashes");
-    std::string queryLinksData;
-    queryLinksApp->add_option("searchMD5", queryLinksData, "Data to get links from")->required();
-
-    querySub->add_subcommand("logs", "Get data import logs");
-
-    partialFlagOpt->excludes(exactFlagOpt);
-    exactFlagOpt->excludes(partialFlagOpt);
-
+    CLI::App* querySub = app.add_subcommand("query", "Query data from Hatofi DB");
     std::string dt;
     std::string search_string;
-    queryOpt->add_option("dataclass", dt, "You string to look for in database' data")->required();
-    queryOpt->add_option("searchString", search_string, "You string to look for in database' data")->required();
+    std::string md5Hash;
+
+    CLI::App* querySearchApp = querySub->add_subcommand("search", "Search if a given data exists in database");
+    querySearchApp->add_option("-t,--dataclass", dt, "Dataclass to search in")->required();
+    querySearchApp->add_option("-d,--data", search_string, "The string to search for in database")->required();
+
+    CLI::App* queryLinksApp = querySub->add_subcommand("links", "Get linked data hashes");
+    queryLinksApp->add_option("-t,--dataclass", dt, "Dataclass to search in")->required();
+    queryLinksApp->add_option("-s,--search", md5Hash, "Data to get links from")->required();
+
+    CLI::App* queryLogsApp = querySub->add_subcommand("logs", "Get data import logs");
+    queryLogsApp->add_option("-t,--dataclass", dt, "Dataclass to search in")->required();
+    queryLogsApp->add_option("-s,--search", md5Hash, "Data to get logs from")->required();
+
 
     try {
         app.parse(argc, argv);
@@ -117,21 +113,21 @@ int main(int argc, char** argv) {
 
     else if(app.got_subcommand("query"))
     {
-
         if(querySub->got_subcommand("links"))
         {
-            for (const auto & entry : db->getDataLinks(queryLinksData))
+            for (const auto & entry : db->getDataLinks(dt, md5Hash))
                 std::cout << entry.path().filename().string() << std::endl;
             return 0;
         }
-
-        std::string result;
-        if (queryPartialMatch)
-            result = db->query(dt, search_string, HaDB::MATCH_TYPE::PARTIAL);
+        else if (querySub->got_subcommand("logs"))
+        {
+            std::cout << db->getLogs(dt, md5Hash) << std::endl;
+        }
+        // Default is query search
         else
-            result = db->query(dt, search_string, HaDB::MATCH_TYPE::EXACT);
-
-        printf("%s\n",result.c_str());
+        {
+            db->query(dt, search_string);
+        }
     }
     else
     {

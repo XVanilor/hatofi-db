@@ -8,7 +8,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <utility>
-#include "lib/cpp-base64/base64.h"
 #include "lib/crypto/md5.h"
 #include "lib/uuid_v4.h"
 
@@ -17,12 +16,12 @@
 #include "HaTable.h"
 #include "Log.h"
 
-HaDB::HaDB(const std::string& fsRoot) {
+HaDB::HaDB(const std::string &fsRoot) {
 
     setRoot(fsRoot);
 }
 
-HaDB* HaDB::setName(const std::string& newName) {
+HaDB *HaDB::setName(const std::string &newName) {
 
     this->dbName = newName;
     return this;
@@ -30,8 +29,7 @@ HaDB* HaDB::setName(const std::string& newName) {
 
 void HaDB::setRoot(const std::string &fsRoot) {
 
-    if(!isHaDB(fsRoot))
-    {
+    if (!isHaDB(fsRoot)) {
         throw std::invalid_argument("Data folder is not a Hatofi database");
     }
     this->root = fsRoot;
@@ -42,15 +40,14 @@ std::string HaDB::getRoot() {
     return this->root;
 }
 
-HaTable* HaDB::addTable(HaTable* newTable)
-{
+HaTable *HaDB::addTable(HaTable *newTable) {
     this->tables.push_back(newTable);
     return newTable;
 }
 
-HaTable* HaDB::addEmptyTable(const std::string& tableName) {
+HaTable *HaDB::addEmptyTable(const std::string &tableName) {
 
-    auto* newTable = new HaTable(tableName);
+    auto *newTable = new HaTable(tableName);
     this->tables.push_back(newTable);
 
     return newTable;
@@ -61,40 +58,36 @@ void HaDB::delTable(std::string tableName) {
     return;
 }
 
-std::vector<HaTable*> HaDB::getTables() {
+std::vector<HaTable *> HaDB::getTables() {
 
     return this->tables;
 }
 
-HaDB* HaDB::loadConfig(const std::string &configFile) {
+HaDB *HaDB::loadConfig(const std::string &configFile) {
     std::ifstream ifs(configFile);
 
     std::string currentSectionName;
-    auto* currentTable = new HaTable("default");
+    auto *currentTable = new HaTable("default");
 
     std::string line;
     int i = 0;
     int tablesLoaded = 0;
 
-    while(std::getline(ifs, line))
-    {
+    while (std::getline(ifs, line)) {
         i++;
 
         // Skip empty or commented lines
-        if(line.empty() || line.starts_with("#"))
+        if (line.empty() || line.starts_with("#"))
             continue;
 
-        // Process YAML section name lines
-        else if(line.starts_with("[") && line.ends_with("]"))
-        {
-            line.erase(0,1);
+            // Process YAML section name lines
+        else if (line.starts_with("[") && line.ends_with("]")) {
+            line.erase(0, 1);
             line.erase(line.length() - 1, 1);
             currentSectionName = line;
 
-            if(currentSectionName == "table")
-            {
-                if(tablesLoaded == 0)
-                {
+            if (currentSectionName == "table") {
+                if (tablesLoaded == 0) {
                     // Skip first sample table
                     tablesLoaded++;
                     continue;
@@ -106,102 +99,83 @@ HaDB* HaDB::loadConfig(const std::string &configFile) {
             }
             continue;
         }
-        // Process key-value lines
-        else if(line.find('=') != std::string::npos) // Check if line is formatted as key=value (contains an =)
+            // Process key-value lines
+        else if (line.find('=') != std::string::npos) // Check if line is formatted as key=value (contains an =)
         {
             std::string key = line.substr(0, line.find('='));
             std::string value = line.substr(line.find('=') + 1, line.length() - line.find('='));
 
             // HatofiDB config
-            if(currentSectionName == "hatofi")
-            {
-                if(key == "name")
-                {
+            if (currentSectionName == "hatofi") {
+                if (key == "name") {
                     this->setName(value);
                     continue;
-                }
-                else
-                {
-                    throw std::invalid_argument("Invalid config file at line "+std::to_string(i)+": Unknown config key "+currentSectionName);
+                } else {
+                    throw std::invalid_argument(
+                            "Invalid config file at line " + std::to_string(i) + ": Unknown config key " +
+                            currentSectionName);
                 }
             }
 
-            // Table config
-            else if(currentSectionName == "table")
-            {
-                if(key == "name")
-                {
+                // Table config
+            else if (currentSectionName == "table") {
+                if (key == "name") {
                     currentTable->setName(value);
-                }
-                else if(key == "ns")
-                {
+                } else if (key == "ns") {
                     currentTable->setNS(value);
-                }
-                else if(key == "maxDepth")
-                {
-                    if(!is_number(value))
-                    {
-                        throw std::invalid_argument("Invalid config file at line "+std::to_string(i)+": maxDepth must be an integer");
+                } else if (key == "maxDepth") {
+                    if (!is_number(value)) {
+                        throw std::invalid_argument(
+                                "Invalid config file at line " + std::to_string(i) + ": maxDepth must be an integer");
                     }
                     currentTable->maxDepth = std::stoi(value);
-                }
-                else if(key == "bytesPerDepth")
-                {
-                    if(!is_number(value))
-                    {
-                        throw std::invalid_argument("Invalid config file at line "+std::to_string(i)+": bytesPerDepth must be an integer");
+                } else if (key == "bytesPerDepth") {
+                    if (!is_number(value)) {
+                        throw std::invalid_argument("Invalid config file at line " + std::to_string(i) +
+                                                    ": bytesPerDepth must be an integer");
                     }
                     currentTable->maxDepth = std::stoi(value);
-                }
-                else if(key == "q1")
-                {
-                    if(!is_number(value))
-                    {
-                        throw std::invalid_argument("Invalid config file at line "+std::to_string(i)+": q1 must be an integer");
+                } else if (key == "q1") {
+                    if (!is_number(value)) {
+                        throw std::invalid_argument(
+                                "Invalid config file at line " + std::to_string(i) + ": q1 must be an integer");
                     }
                     double q1 = std::stoi(value);
-                    if(currentTable->quartiles == nullptr)
+                    if (currentTable->quartiles == nullptr)
                         currentTable->quartiles = new StringRepartitionQuartiles(q1, q1, q1 + 1);
                     currentTable->quartiles->q1 = q1;
-                }
-                else if(key == "q2")
-                {
-                    if(!is_number(value))
-                    {
-                        throw std::invalid_argument("Invalid config file at line "+std::to_string(i)+": q2 must be an integer");
+                } else if (key == "q2") {
+                    if (!is_number(value)) {
+                        throw std::invalid_argument(
+                                "Invalid config file at line " + std::to_string(i) + ": q2 must be an integer");
                     }
                     double q2 = std::stoi(value);
-                    if(currentTable->quartiles == nullptr)
+                    if (currentTable->quartiles == nullptr)
                         currentTable->quartiles = new StringRepartitionQuartiles(q2, q2, q2 + 1);
                     currentTable->quartiles->q2 = q2;
-                }
-                else if(key == "q3")
-                {
-                    if(!is_number(value))
-                    {
-                        throw std::invalid_argument("Invalid config file at line "+std::to_string(i)+": q3 must be an integer");
+                } else if (key == "q3") {
+                    if (!is_number(value)) {
+                        throw std::invalid_argument(
+                                "Invalid config file at line " + std::to_string(i) + ": q3 must be an integer");
                     }
                     double q3 = std::stoi(value);
-                    if(currentTable->quartiles == nullptr)
+                    if (currentTable->quartiles == nullptr)
                         currentTable->quartiles = new StringRepartitionQuartiles(q3 - 1, q3 - 1, q3);
                     currentTable->quartiles->q3 = q3;
                 }
             }
-            // Unknown. Throws error
-            else
-            {
-                throw std::invalid_argument("Invalid config file at line "+std::to_string(i)+": Unknown section "+currentSectionName);
+                // Unknown. Throws error
+            else {
+                throw std::invalid_argument(
+                        "Invalid config file at line " + std::to_string(i) + ": Unknown section " + currentSectionName);
             }
-        }
-        else
-        {
-            throw std::invalid_argument("Invalid config file at line "+std::to_string(i)+": Invalid line");
+        } else {
+            throw std::invalid_argument("Invalid config file at line " + std::to_string(i) + ": Invalid line");
         }
     }
 
     // Load last table
-    if(tablesLoaded > 0)
-    {
+    if (tablesLoaded > 0) {
         this->addTable(currentTable);
     }
 
@@ -216,36 +190,33 @@ void HaDB::publish() {
     std::ofstream configFile;
     configFile.open(this->getRoot() + "/.dbmeta");
     configFile << "[hatofi]\n";
-    configFile << "name="+this->dbName+"\n";
+    configFile << "name=" + this->dbName + "\n";
 
     // Create tables
-    for(HaTable* t : this->tables)
-    {
-        if(dirExists(this->getRoot() + "/" + t->getFullName()))
-        {
-            log_warn("Table "+t->getName()+" already exists and will not be overwrite");
+    for (HaTable *t: this->tables) {
+        if (dirExists(this->getRoot() + "/" + t->getFullName())) {
+            log_warn("Table " + t->getName() + " already exists and will not be overwrite");
             continue;
         }
 
-        log_info("Making "+t->getName()+"...");
+        log_info("Making " + t->getName() + "...");
 
         configFile << "[table]\n";
-        configFile << "ns="+t->getNS()+"\n";
-        configFile << "name="+t->getName()+"\n";
-        configFile << "maxDepth="+std::to_string(t->maxDepth)+"\n";
-        configFile << "bytesPerDepth="+std::to_string(t->bytesPerDepth)+"\n";
-        if(t->quartiles != nullptr)
-        {
-            configFile << "q1="+std::to_string(t->quartiles->q1)+"\n";
-            configFile << "q2="+std::to_string(t->quartiles->q2)+"\n";
-            configFile << "q3="+std::to_string(t->quartiles->q3)+"\n";
+        configFile << "ns=" + t->getNS() + "\n";
+        configFile << "name=" + t->getName() + "\n";
+        configFile << "maxDepth=" + std::to_string(t->maxDepth) + "\n";
+        configFile << "bytesPerDepth=" + std::to_string(t->bytesPerDepth) + "\n";
+        if (t->quartiles != nullptr) {
+            configFile << "q1=" + std::to_string(t->quartiles->q1) + "\n";
+            configFile << "q2=" + std::to_string(t->quartiles->q2) + "\n";
+            configFile << "q3=" + std::to_string(t->quartiles->q3) + "\n";
         }
 
         // Load table into HaDB
-        if(t->maxDepth == 2)
-            log_info(t->getName()+" table maxDepth: 2 (default)");
-        if(t->bytesPerDepth == 2)
-            log_info(t->getName()+" table bytesPerDepth: 2 (default)");
+        if (t->maxDepth == 2)
+            log_info(t->getName() + " table maxDepth: 2 (default)");
+        if (t->bytesPerDepth == 2)
+            log_info(t->getName() + " table bytesPerDepth: 2 (default)");
 
         t->publish(this->getRoot());
     }
@@ -253,15 +224,13 @@ void HaDB::publish() {
     configFile.close();
 }
 
-void HaDB::load(const std::string& file, bool force = false)
-{
+void HaDB::load(const std::string &file, bool force = false) {
     // Get current date
     const std::string curDate = currentDate("%Y-%m-%d");
     std::string leakUuid;
 
-    if(!std::filesystem::exists(file))
-    {
-        throw std::invalid_argument("Input file "+file+" does not exists");
+    if (!std::filesystem::exists(file)) {
+        throw std::invalid_argument("Input file " + file + " does not exists");
     }
 
     // Start i/o operations
@@ -272,44 +241,40 @@ void HaDB::load(const std::string& file, bool force = false)
 
     // Get leak UUID in first line and check it\'s value
     std::getline(ifs, leakUuid);
-    if(!is_valid_uuid(leakUuid))
-    {
-        log_error("Leak UUID '"+leakUuid+"' in file "+file+" is invalid");
+    if (!is_valid_uuid(leakUuid)) {
+        log_error("Leak UUID '" + leakUuid + "' in file " + file + " is invalid");
         exit(1);
     }
 
     // Register file hash & confirm startup
     std::ofstream fileOut;
-    std::string inputFileMd5 = exec("md5sum '"+file+"' | cut -d' ' -f1");
-    std::string inputFileSha256 = exec("sha256sum '"+file+"' | cut -d' ' -f1");
+    std::string inputFileMd5 = exec("md5sum '" + file + "' | cut -d' ' -f1");
+    std::string inputFileSha256 = exec("sha256sum '" + file + "' | cut -d' ' -f1");
     std::string fileRegisterFileName = fmt::format("{}/file/{}/{}/{}.sha256",
-                                                  this->getRoot(),
-                                                  inputFileSha256.substr(0,2),
-                                                  inputFileSha256.substr(2,2),
-                                                  inputFileSha256
-                                              );
+                                                   this->getRoot(),
+                                                   inputFileSha256.substr(0, 2),
+                                                   inputFileSha256.substr(2, 2),
+                                                   inputFileSha256
+    );
 
     // Check if file was already registered
-    if(std::filesystem::exists(fileRegisterFileName))
-    {
-        if(force)
-        {
+    if (std::filesystem::exists(fileRegisterFileName)) {
+        if (force) {
             // Remove old log file if user asked to force importation
             remove(fileRegisterFileName.c_str());
         }
-        // Check if file was fully imported
-        else if(exec("grep '^status done$' '"+fileRegisterFileName+"'") == "status done")
-        {
+            // Check if file was fully imported
+        else if (exec("grep '^status done$' '" + fileRegisterFileName + "'") == "status done") {
             throw std::invalid_argument("File was already registered in database");
         }
-        /**
-         *  File was registered but not completely imported
-         *  It can be either an error in runtime (hatofi load process was aborted using kill)
-         *  or that an another process with the same file is running
-         */
-        else
-        {
-            throw std::runtime_error("File was registered in database but import was not completed. Use -f or --force to force import (Warning: data may be loaded twice if another import process with this input file is running");
+            /**
+             *  File was registered but not completely imported
+             *  It can be either an error in runtime (hatofi load process was aborted using kill)
+             *  or that an another process with the same file is running
+             */
+        else {
+            throw std::runtime_error(
+                    "File was registered in database but import was not completed. Use -f or --force to force import (Warning: data may be loaded twice if another import process with this input file is running");
         }
     }
 
@@ -318,11 +283,10 @@ void HaDB::load(const std::string& file, bool force = false)
                            inputFileMd5,
                            inputFileSha256,
                            currentDate("%Y-%m-%dT%H:%M:%S")
-                           );
+    );
     fileOut.close();
 
-    while(std::getline(ifs, line))
-    {
+    while (std::getline(ifs, line)) {
         std::ofstream dataOutFile;
         std::ofstream logFile;
 
@@ -333,29 +297,27 @@ void HaDB::load(const std::string& file, bool force = false)
         std::string dt = columns[2];
         std::string dataMD5 = columns[4];
 
-        if(!std::filesystem::exists(fmt::format("{}/dataclass/{}", this->getRoot(), dt)))
-        {
-            log_warn("Dataclass `"+dt+"` does not exist");
+        if (!std::filesystem::exists(fmt::format("{}/dataclass/{}", this->getRoot(), dt))) {
+            log_warn("Dataclass `" + dt + "` does not exist");
             continue;
         }
 
         std::string entryAbsLoc = fmt::format("{}/dataclass/{}/{}/{}/{}",
                                               this->getRoot(),
                                               dt,
-                                              dataMD5.substr(0,2),
-                                              dataMD5.substr(2,2),
+                                              dataMD5.substr(0, 2),
+                                              dataMD5.substr(2, 2),
                                               dataMD5
-                                              );
+        );
         std::string keyAbsLoc = fmt::format("{}/dataclass/{}/{}/{}/{}",
-                                              this->getRoot(),
-                                              keyDt,
-                                              keyMD5.substr(0,2),
-                                              keyMD5.substr(2,2),
-                                              keyMD5
+                                            this->getRoot(),
+                                            keyDt,
+                                            keyMD5.substr(0, 2),
+                                            keyMD5.substr(2, 2),
+                                            keyMD5
         );
         // Create Entry folder architecture if it does not exist yet
-        if(!std::filesystem::exists(entryAbsLoc))
-        {
+        if (!std::filesystem::exists(entryAbsLoc)) {
             std::filesystem::create_directory(entryAbsLoc);
 
             // Put data definition into folder if not created yet
@@ -377,38 +339,36 @@ void HaDB::load(const std::string& file, bool force = false)
         logFile.close();
 
         // Create bidirectional symlink only if it does not point to current data
-        if(keyMD5 == dataMD5)
+        if (keyMD5 == dataMD5)
             continue;
 
         std::string keyRelativeLocation = fmt::format("../../../../../{}/{}/{}/{}",
-                                                        keyDt,
-                                                        keyMD5.substr(0,2),
-                                                        keyMD5.substr(2, 2),
-                                                        keyMD5
-                                                    );
+                                                      keyDt,
+                                                      keyMD5.substr(0, 2),
+                                                      keyMD5.substr(2, 2),
+                                                      keyMD5
+        );
         std::string dataRelativeLocation = fmt::format("../../../../../{}/{}/{}/{}",
-                                                        dt,
-                                                        dataMD5.substr(0,2),
-                                                        dataMD5.substr(2,2),
-                                                        dataMD5
-                                                    );
+                                                       dt,
+                                                       dataMD5.substr(0, 2),
+                                                       dataMD5.substr(2, 2),
+                                                       dataMD5
+        );
         try {
             // Create key to entry symlink
             std::filesystem::create_directory_symlink(dataRelativeLocation, keyAbsLoc + "/links/" + dataMD5);
-        } catch (std::filesystem::filesystem_error& error)
-        {
+        } catch (std::filesystem::filesystem_error &error) {
             // Warn only if error is not "File exists"
-            if(error.code().message().find("File exists") == std::string::npos)
+            if (error.code().message().find("File exists") == std::string::npos)
                 log_warn(error.what());
             // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
         }
         try {
             // Create entry to key symlink
             std::filesystem::create_directory_symlink(keyRelativeLocation, entryAbsLoc + "/links/" + keyMD5);
-        } catch (std::filesystem::filesystem_error& error)
-        {
+        } catch (std::filesystem::filesystem_error &error) {
             // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
-            if(error.code().message().find("File exists") == std::string::npos)
+            if (error.code().message().find("File exists") == std::string::npos)
                 log_warn(error.what());
         }
 
@@ -420,117 +380,73 @@ void HaDB::load(const std::string& file, bool force = false)
     fileOut.close();
 }
 
-std::string HaDB::query(const std::string& dataclass, std::string searchString, HaDB::MATCH_TYPE matchType)
-{
-    if(searchString.length() < MIN_SEARCH_LEN)
-        throw std::invalid_argument("Search must be at least "+std::to_string(MIN_SEARCH_LEN)+" characters long");
+void HaDB::query(const std::string &dataclass, std::string searchString) {
 
-    std::string searchPath = this->getRoot() + "/dataclass/"+dataclass;
+    std::string searchPath = this->getRoot() + "/dataclass/" + dataclass;
 
     UUIDv4::UUIDGenerator<std::mt19937_64> uuidGenerator;
     std::string task_uuid = uuidGenerator.getUUID().str();
 
-    if(matchType == HaDB::MATCH_TYPE::PARTIAL)
-    {
-        // Encode string to base64 and calculate possible variants
-        // std::string is base64 encoded string, first int is string length, second int is the length of prefix
-        std::string b64_0 = base64_encode(searchString);
-        std::string b64_1 = base64_encode('a'+searchString);
-        std::string b64_2 = base64_encode("aa"+searchString);
-
-        int searchString_mod = 8*searchString.length() % 6;
-
-        // Remove suffix and keep only common for all subvariations
-        if(searchString_mod == 0)
-        {
-            // b64_0 = b64_0; Useless but keep it for better reading comprehension
-            b64_1.erase(b64_1.length()-3,3);
-            b64_2.erase(b64_2.length()-2,2);
-        }
-        if(searchString_mod == 2)
-        {
-            b64_0.erase(b64_0.length() - 3, 3);
-            b64_1.erase(b64_1.length()-2,2);
-            //b64_2 = b64_2;
-        }
-        if(searchString_mod == 4)
-        {
-            b64_0.erase(b64_0.length() - 2, 2);
-            //b64_1 = b64_1
-            b64_2.erase(b64_2.length() - 3, 3);
-        }
-
-        // Remove prefix for variant 1 & 2
-        b64_1.erase(0,2);
-        b64_2.erase(0,3);
-
-        // Starts search
-        std::string cmd0;
-        std::string cmd1;
-        std::string cmd2;
-
-        // Check if sift was installed on system. If not, use grep
-        if(system("which sift > /dev/null 2>&1"))
-        {
-            // sift is not installed. Running search using grep and send the ticket number to output
-            cmd0 = "grep -r '"+b64_0+"' '"+searchPath+"' > /tmp/"+task_uuid+".0.txt &";
-            cmd1 = "grep -r '"+b64_1+"' '"+searchPath+"' > /tmp/"+task_uuid+".1.txt &";
-            cmd2 = "grep -r '"+b64_2+"' '"+searchPath+"' > /tmp/"+task_uuid+".2.txt &";
-        }
-        // sift is installed
-        else
-        {
-            cmd0 = "sift -r '"+b64_0+"' '"+searchPath+"' > /tmp/"+task_uuid+".0.txt &";
-            cmd1 = "sift -r '"+b64_1+"' '"+searchPath+"' > /tmp/"+task_uuid+".1.txt &";
-            cmd2 = "sift -r '"+b64_2+"' '"+searchPath+"' > /tmp/"+task_uuid+".2.txt &";
-        }
-
-        system(cmd0.c_str());
-        system(cmd1.c_str());
-        system(cmd2.c_str());
-    }
     // Performs exact and full match search using MD5 hash
-    else
-    {
-        // Get first 2 and 4th bytes of MD5 hash
-        std::string searchHash = md5(std::move(searchString));
+    // Get first 2 and 4th bytes of MD5 hash
+    std::string searchHash = md5(std::move(searchString));
 
-        std::string root1 = searchHash.substr(0,2);
-        std::string root2 = searchHash.substr(2,2);
+    std::string root1 = searchHash.substr(0, 2);
+    std::string root2 = searchHash.substr(2, 2);
 
-        // File path
-        std::string fPath = searchPath + "/" + root1 + "/" + root2 + "/" + searchHash + "/" + searchHash + ".md5";
-        std::string resPath = "/tmp/"+task_uuid+".0.txt";
+    // File path
+    std::string fPath = searchPath + "/" + root1 + "/" + root2 + "/" + searchHash + "/" + searchHash + ".md5";
 
-        std::string cmd0 = "cat '"+fPath+"'";
+    std::string cmd0 = "cat '" + fPath + "'";
 
-        if(!std::filesystem::exists(fPath))
-        {
-            std::ofstream output(fPath);
-            output << "Data does not exits" << std::endl;
-            return task_uuid;
-        }
-
-        system(cmd0.c_str());
+    if (!std::filesystem::exists(fPath)) {
+        std::cerr << "Data does not exits" << std::endl;
+        return;
     }
-    return task_uuid;
+
+    system(cmd0.c_str());
 }
 
-std::filesystem::directory_iterator HaDB::getDataLinks(std::string md5Hash)
-{
+std::filesystem::directory_iterator HaDB::getDataLinks(const std::string& dataclass, const std::string& md5Hash) {
 
-    std::string root1 = md5Hash.substr(0,2);
-    std::string root2 = md5Hash.substr(2,2);
+    std::string root1 = md5Hash.substr(0, 2);
+    std::string root2 = md5Hash.substr(2, 2);
     // Data path
-    std::string dataPath = this->getRoot() + "/" + root1 + "/" + root2 + "/" + md5Hash;
+    std::string dataPath = this->getRoot() + "/dataclass/" + dataclass + "/" + root1 + "/" + root2 + "/" + md5Hash;
+    std::cout << dataPath << std::endl;
 
-    if(!std::filesystem::exists(dataPath))
-    {
-        std::cout << "Data does not exits" << std::endl;
+    if (!std::filesystem::exists(dataPath)) {
+        std::cerr << "Data does not exits" << std::endl;
         return {};
     }
 
     return std::filesystem::directory_iterator(dataPath + "/links");
 
+}
 
+std::string HaDB::getLogs(const std::string& dataclass, const std::string& md5Hash) {
+
+    std::string root1 = md5Hash.substr(0, 2);
+    std::string root2 = md5Hash.substr(2, 2);
+    // Data path
+    std::string logPath = this->getRoot() + "/dataclass/" + dataclass + "/" + root1 + "/" + root2 + "/" + md5Hash;
+
+    if (!std::filesystem::exists(logPath)) {
+        std::cerr << "Data does not exits" << std::endl;
+        return {};
+    }
+
+    FILE* f = std::fopen((logPath + "/logs/import.log").c_str(), "r");
+
+    // Determine file size
+    fseek(f, 0, SEEK_END);
+    size_t size = ftell(f);
+
+    char* where = new char[size];
+
+    rewind(f);
+    fread(where, sizeof(char), size, f);
+    std::fclose(f);
+
+    return where;
 }

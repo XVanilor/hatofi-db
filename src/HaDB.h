@@ -13,10 +13,6 @@
 class HaDB {
 
 public:
-    enum MATCH_TYPE {
-        EXACT,
-        PARTIAL
-    };
 
     const size_t MIN_SEARCH_LEN = 7; // Minimum recommended is 7, as it will match at least 4 base64 encoded characters
 
@@ -35,8 +31,9 @@ public:
     std::vector<HaTable*> getTables();
 
     void load(const std::string& file, bool force);
-    std::string query(const std::string& dataclass, std::string searchString, MATCH_TYPE matchType);
-    std::filesystem::directory_iterator getDataLinks(std::string md5Hash);
+    void query(const std::string& dataclass, std::string searchString);
+    std::filesystem::directory_iterator getDataLinks(const std::string& dataclass, const std::string& md5Hash);
+    std::string getLogs(const std::string& dataclass, const std::string& md5Hash);
 
 private:
     std::string dbName;
