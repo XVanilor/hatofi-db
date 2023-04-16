@@ -397,7 +397,9 @@ void HaDB::load(const std::string& file, bool force = false)
             std::filesystem::create_directory_symlink(dataRelativeLocation, keyAbsLoc + "/links/" + dataMD5);
         } catch (std::filesystem::filesystem_error& error)
         {
-            log_warn(error.what());
+            // Warn only if error is not "File exists"
+            if(error.code().message().find("File exists") == std::string::npos)
+                log_warn(error.what());
             // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
         }
         try {
@@ -406,7 +408,8 @@ void HaDB::load(const std::string& file, bool force = false)
         } catch (std::filesystem::filesystem_error& error)
         {
             // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
-            log_warn(error.what());
+            if(error.code().message().find("File exists") == std::string::npos)
+                log_warn(error.what());
         }
 
     }
