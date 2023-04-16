@@ -413,7 +413,6 @@ std::filesystem::directory_iterator HaDB::getDataLinks(const std::string& datacl
     std::string root2 = md5Hash.substr(2, 2);
     // Data path
     std::string dataPath = this->getRoot() + "/dataclass/" + dataclass + "/" + root1 + "/" + root2 + "/" + md5Hash;
-    std::cout << dataPath << std::endl;
 
     if (!std::filesystem::exists(dataPath)) {
         std::cerr << "Data does not exits" << std::endl;
