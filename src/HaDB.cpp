@@ -295,6 +295,7 @@ void HaDB::load(const std::string &file, bool force = false) {
         std::string keyDt = columns[0];
         std::string keyMD5 = columns[1];
         std::string dt = columns[2];
+        std::string data_base64 = columns[3];
         std::string dataMD5 = columns[4];
 
         if (!std::filesystem::exists(fmt::format("{}/dataclass/{}", this->getRoot(), dt))) {
@@ -323,7 +324,7 @@ void HaDB::load(const std::string &file, bool force = false) {
             // Put data definition into folder if not created yet
             std::string dataOutFileName = fmt::format("{}/{}.md5", entryAbsLoc, dataMD5);
             dataOutFile.open(dataOutFileName);
-            dataOutFile << fmt::format("md5:{}\n", dataMD5);
+            dataOutFile << fmt::format("b64:{}\nmd5:{}\n", data_base64, dataMD5);
             dataOutFile.close();
 
             // Create links/ and logs/ subdirectory
