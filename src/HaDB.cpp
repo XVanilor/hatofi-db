@@ -40,6 +40,17 @@ std::string HaDB::getRoot() {
     return this->root;
 }
 
+std::string HaDB::getDataPath(const std::string &dataclass, const std::string& dataMD5) {
+
+    // Performs exact and full match search using MD5 hash
+    // Get first 2 and 4th bytes of MD5 hash
+    std::string root1 = dataMD5.substr(0, 2);
+    std::string root2 = dataMD5.substr(2, 2);
+
+    // File path
+    return this->getRoot() + "/dataclass/" + dataclass + "/" + root1 + "/" + root2 + "/" + dataMD5;
+}
+
 HaTable *HaDB::addTable(HaTable *newTable) {
     this->tables.push_back(newTable);
     return newTable;
@@ -381,30 +392,23 @@ void HaDB::load(const std::string &file, bool force = false) {
     fileOut.close();
 }
 
-void HaDB::query(const std::string &dataclass, std::string searchString) {
-
-    std::string searchPath = this->getRoot() + "/dataclass/" + dataclass;
-
-    UUIDv4::UUIDGenerator<std::mt19937_64> uuidGenerator;
-    std::string task_uuid = uuidGenerator.getUUID().str();
-
-    // Performs exact and full match search using MD5 hash
-    // Get first 2 and 4th bytes of MD5 hash
+void HaDB::query(const std::string &dataclass, std::string searchString)
+{
     std::string searchHash = md5(std::move(searchString));
+    return this->query_by_hash(dataclass, searchHash);
+}
 
-    std::string root1 = searchHash.substr(0, 2);
-    std::string root2 = searchHash.substr(2, 2);
-
+void HaDB::query_by_hash(const std::string& dataclass, const std::string& searchHash)
+{
     // File path
-    std::string fPath = searchPath + "/" + root1 + "/" + root2 + "/" + searchHash + "/" + searchHash + ".md5";
-
-    std::string cmd0 = "cat '" + fPath + "'";
+    std::string fPath = this->getDataPath(dataclass, searchHash) + "/" + searchHash + ".md5";
 
     if (!std::filesystem::exists(fPath)) {
         std::cerr << "Data does not exits" << std::endl;
         return;
     }
 
+    std::string cmd0 = "cat '" + fPath + "'";
     system(cmd0.c_str());
 }
 

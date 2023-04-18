@@ -32,6 +32,7 @@ public:
 
     void load(const std::string& file, bool force);
     void query(const std::string& dataclass, std::string searchString);
+    void query_by_hash(const std::string& dataclass, const std::string& searchHash);
     std::filesystem::directory_iterator getDataLinks(const std::string& dataclass, const std::string& md5Hash);
     std::string getLogs(const std::string& dataclass, const std::string& md5Hash);
 
@@ -39,6 +40,8 @@ private:
     std::string dbName;
     std::string root;
     std::vector<HaTable*> tables;
+
+    std::string getDataPath(const std::string& dataclass, const std::string& dataMD5);
 
 };
 

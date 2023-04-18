@@ -10,7 +10,7 @@
 
 int main(int argc, char** argv) {
 
-    const std::string BUILD_VERSION = "2.1.4";
+    const std::string BUILD_VERSION = "2.2";
 
     /** Application init **/
     CLI::App app{"HatofiDB - Hashmap To Filesystem Database\n    > Created by Matthieu \"Vanilor\" Herbette\n    > Find the repo at https://github.com/XVanilor/hatofi-db/\n"};
@@ -39,20 +39,27 @@ int main(int argc, char** argv) {
     /** Data Query */
     CLI::App* querySub = app.add_subcommand("query", "Query data from Hatofi DB");
     std::string dt;
-    std::string search_string;
+    std::string search_plaintext;
+    std::string search_md5;
     std::string md5Hash;
 
     CLI::App* querySearchApp = querySub->add_subcommand("search", "Search if a given data exists in database");
-    querySearchApp->add_option("-t,--dataclass", dt, "Dataclass to search in")->required();
-    querySearchApp->add_option("-d,--data", search_string, "The string to search for in database")->required();
+    querySearchApp->add_option("-D,--dataclass", dt, "Dataclass to search in")->required();
+
+    // Add an option to search by hash OR by plain text value, exclusively
+    auto* querySearchTypeGroup = querySearchApp->add_option_group("searchByWhat");
+    querySearchTypeGroup->add_option("-H,--hash", search_md5, "Search for a data using it's MD5 hash");
+    querySearchTypeGroup->add_option("-T,--text", search_plaintext, "Search for a data using it's plain text value");
+    querySearchTypeGroup->require_option(1); // Require one and only one of those arguments
+
 
     CLI::App* queryLinksApp = querySub->add_subcommand("links", "Get linked data hashes");
-    queryLinksApp->add_option("-t,--dataclass", dt, "Dataclass to search in")->required();
-    queryLinksApp->add_option("-s,--search", md5Hash, "Data to get links from")->required();
+    queryLinksApp->add_option("-D,--dataclass", dt, "Dataclass to search in")->required();
+    queryLinksApp->add_option("-H,--hash", md5Hash, "Data to get links from")->required();
 
     CLI::App* queryLogsApp = querySub->add_subcommand("logs", "Get data import logs");
-    queryLogsApp->add_option("-t,--dataclass", dt, "Dataclass to search in")->required();
-    queryLogsApp->add_option("-s,--search", md5Hash, "Data to get logs from")->required();
+    queryLogsApp->add_option("-D,--dataclass", dt, "Dataclass to search in")->required();
+    queryLogsApp->add_option("-H,--hash", md5Hash, "Data to get logs from")->required();
 
 
     try {
@@ -123,10 +130,18 @@ int main(int argc, char** argv) {
         {
             std::cout << db->getLogs(dt, md5Hash) << std::endl;
         }
-        // Default is query search
+        // Default is plain text query search
         else
         {
-            db->query(dt, search_string);
+            // Query search has been performed by hash
+            if(!search_md5.empty())
+            {
+                db->query_by_hash(dt, search_md5);
+            }
+            else
+            {
+                db->query(dt, search_plaintext);
+            }
         }
     }
     else

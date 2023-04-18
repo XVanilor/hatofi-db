@@ -6,10 +6,11 @@ Hatofi, stands for "Hashmap to Filesystem" is a key-value database running on Li
 
 ## Usage
 
-- Database creation via config file via `hatofi --data_directory <data_dir> gen --config <config_file.txt>`
-- Import data using `hatofi --data_directory <data_dir> load --input <input.txt>`
-- Query data (partial or exact match) using `hatofi --data_directory <data_dir> query [--exact|--partial] <your_search>`
-- Get linked data with `hatofi --data-directory <data_dir> query links <data_md5>`
+- Database creation via config file via `hatofi [-d,--data-directory] <data_dir> gen [-c,--config] <config_file.txt>`
+- Import data using `hatofi [-d,--data-directory] <data_dir> load [-i,--input] <input.txt> [-f,--force /!\ Will erase existing data]`
+- Query data (partial or exact match) using `hatofi [-d,--data-directory] <data_dir> query search [-D,--dataclass] <dataclass> [[-H,--hash] <data_md5> | [-T,--text] <data_plaintext>]`
+- Get linked data with `hatofi [-d,--data-directory] <data_dir> query links [-D,--dataclass] <dataclass> [-H,--hash] <data_md5>`
+- Get data importation logs with `hatofi [-d,--data-directory] <data_dir> query logs [-D,--dataclass] <dataclass> [-H,--hash] <data_md5>`
 ## Input Format
 
 Input file format:
@@ -108,6 +109,7 @@ Desired filesystem output architecture:
 
 ## Changelog
 
+- **2.2.x**: Added back data base64 encoded value for simplication purposes. Added "Get Links", "Get Logs" and "Search by Hash" features
 - **2.1.x**: Remove support for partial data search: Database is now full anonymized
 - **v2.x**: Builds graph at importation, calculate heuristics to reduce keyspace at partial search
 - **v1.x**: Basic organization of data in filesystem
