@@ -414,10 +414,8 @@ void HaDB::query_by_hash(const std::string& dataclass, const std::string& search
 
 std::filesystem::directory_iterator HaDB::getDataLinks(const std::string& dataclass, const std::string& md5Hash) {
 
-    std::string root1 = md5Hash.substr(0, 2);
-    std::string root2 = md5Hash.substr(2, 2);
     // Data path
-    std::string dataPath = this->getRoot() + "/dataclass/" + dataclass + "/" + root1 + "/" + root2 + "/" + md5Hash;
+    std::string dataPath = getDataPath(dataclass, md5Hash);
 
     if (!std::filesystem::exists(dataPath)) {
         std::cerr << "Data does not exits" << std::endl;
@@ -425,7 +423,6 @@ std::filesystem::directory_iterator HaDB::getDataLinks(const std::string& datacl
     }
 
     return std::filesystem::directory_iterator(dataPath + "/links");
-
 }
 
 std::string HaDB::getLogs(const std::string& dataclass, const std::string& md5Hash) {
@@ -440,17 +437,5 @@ std::string HaDB::getLogs(const std::string& dataclass, const std::string& md5Ha
         return {};
     }
 
-    FILE* f = std::fopen((logPath + "/logs/import.log").c_str(), "r");
-
-    // Determine file size
-    fseek(f, 0, SEEK_END);
-    size_t size = ftell(f);
-
-    char* where = new char[size];
-
-    rewind(f);
-    fread(where, sizeof(char), size, f);
-    std::fclose(f);
-
-    return where;
+    return get_file_content(logPath + "/logs/import.log");
 }

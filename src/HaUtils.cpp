@@ -114,3 +114,16 @@ bool is_valid_uuid(const std::string &s) {
     static const std::regex e("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
     return regex_match(s, e);
 }
+
+std::string get_file_content(const std::string& file_path) {
+
+    FILE* f = std::fopen(file_path.c_str(), "r");
+    fseek(f, 0, SEEK_END);
+    size_t size = ftell(f);
+    char* where = new char[size];
+    rewind(f);
+    fread(where, sizeof(char), size, f);
+    std::fclose(f);
+
+    return where;
+}

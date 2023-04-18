@@ -2,6 +2,8 @@
 // Created by Vanilor on 23/12/22.
 //
 
+#include <cstdlib>
+#include <climits>
 #include "lib/CLI11.hpp"
 
 #include "HaDB.h"
@@ -123,7 +125,25 @@ int main(int argc, char** argv) {
         if(querySub->got_subcommand("links"))
         {
             for (const auto & entry : db->getDataLinks(dt, md5Hash))
-                std::cout << entry.path().filename().string() << std::endl;
+            {
+                char real_link_path[PATH_MAX];
+
+                // We will try to extract dataclass from real file path as it's 3 times parent older in fs hierarchy
+                realpath(entry.path().c_str(), real_link_path);
+                std::filesystem::path p = real_link_path;
+                std::string dt_name = p.parent_path().parent_path().parent_path().filename().string();
+
+                // Get data base64 value
+                std::string b64_value = "::";
+                std::string real_link_path_str = real_link_path;
+                std::ifstream input(real_link_path_str + "/" + entry.path().filename().string() + ".md5");
+                for( std::string line; getline( input, line ); )
+                {
+                    if(line.find("b64:") != std::string::npos)
+                        b64_value = line + ":";
+                }
+                std::cout << dt_name + ":" + b64_value + entry.path().filename().string() << std::endl;
+            }
             return 0;
         }
         else if (querySub->got_subcommand("logs"))

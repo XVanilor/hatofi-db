@@ -36,5 +36,6 @@ std::string currentDate(const std::string& format);
 std::string exec(const std::string& cmd);
 bool is_number(const std::string& s);
 bool is_valid_uuid(const std::string& s);
+std::string get_file_content(const std::string& file_path);
 
 #endif //HATOFI_DB_HAUTILS_H
