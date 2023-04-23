@@ -205,12 +205,6 @@ void HaDB::publish() {
 
     // Create tables
     for (HaTable *t: this->tables) {
-        if (dirExists(this->getRoot() + "/" + t->getFullName())) {
-            log_warn("Table " + t->getName() + " already exists and will not be overwrite");
-            continue;
-        }
-
-        log_info("Making " + t->getName() + "...");
 
         configFile << "[table]\n";
         configFile << "ns=" + t->getNS() + "\n";
@@ -222,6 +216,13 @@ void HaDB::publish() {
             configFile << "q2=" + std::to_string(t->quartiles->q2) + "\n";
             configFile << "q3=" + std::to_string(t->quartiles->q3) + "\n";
         }
+
+        if (dirExists(this->getRoot() + "/" + t->getFullName())) {
+            log_warn("Table " + t->getName() + " already exists and will not be overwrite");
+            continue;
+        }
+
+        log_info("Making " + t->getName() + "...");
 
         // Load table into HaDB
         if (t->maxDepth == 2)
