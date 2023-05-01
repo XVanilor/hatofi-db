@@ -12,7 +12,7 @@
 
 int main(int argc, char** argv) {
 
-    const std::string BUILD_VERSION = "2.2.1";
+    const std::string BUILD_VERSION = "2.3";
 
     /** Application init **/
     CLI::App app{"HatofiDB - Hashmap To Filesystem Database\n    > Created by Matthieu \"Vanilor\" Herbette\n    > Find the repo at https://github.com/XVanilor/hatofi-db/\n"};
@@ -33,10 +33,22 @@ int main(int argc, char** argv) {
 
     /** Data loading **/
     CLI::App* loadSub = app.add_subcommand("load", "Load data into Hatofi database");
+
     std::string file_loaded;
-    bool force_file_load = false;
-    loadSub->add_option("-i,--input", file_loaded, "File to be loaded")->required();
-    loadSub->add_flag("-f,--force", force_file_load, "Force file to be loaded in case of conflict");
+    bool force_load = false;
+    loadSub->add_flag("-f,--force", force_load, "Force file to be loaded in case of conflict");
+
+    CLI::App* loadSubSource = loadSub->add_option_group("loadSubSource");
+    loadSubSource->add_option("-i,--input", file_loaded, "File to be loaded");
+
+    std::string loadSubSourceRawDt;
+    std::string loadSubSourceRawData;
+    CLI::App* loadSubSourceRaw = loadSubSource->add_option_group("loadSubSourceRaw");
+    loadSubSourceRaw->add_option("-D,--dataclass", loadSubSourceRawDt, "Dataclass of new entry")->required();
+    loadSubSourceRaw->add_option("-T,--text", loadSubSourceRawData, "Raw data to insert")->required();
+
+    // Only accepts options from loadSubSource or loadSubSourceRaw
+    loadSubSource->required()->require_option(1);
 
     /** Data Query */
     CLI::App* querySub = app.add_subcommand("query", "Query data from Hatofi DB");
@@ -53,7 +65,6 @@ int main(int argc, char** argv) {
     querySearchTypeGroup->add_option("-H,--hash", search_md5, "Search for a data using it's MD5 hash");
     querySearchTypeGroup->add_option("-T,--text", search_plaintext, "Search for a data using it's plain text value");
     querySearchTypeGroup->require_option(1); // Require one and only one of those arguments
-
 
     CLI::App* queryLinksApp = querySub->add_subcommand("links", "Get linked data hashes");
     queryLinksApp->add_option("-D,--dataclass", dt, "Dataclass to search in")->required();
@@ -105,7 +116,14 @@ int main(int argc, char** argv) {
         try {
 
             log_info("Loading data...");
-            db->load(file_loaded, force_file_load);
+            if(loadSubSourceRawDt.empty() && !file_loaded.empty())
+            {
+                db->loadFromFile(file_loaded, force_load);
+            }
+            else
+            {
+                db->loadRaw(loadSubSourceRawDt, loadSubSourceRawData);
+            }
             log_info("Data loaded successfully");
 
         } catch (const std::invalid_argument& e)

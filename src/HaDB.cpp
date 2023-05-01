@@ -10,6 +10,7 @@
 #include <utility>
 #include "lib/crypto/md5.h"
 #include "lib/uuid_v4.h"
+#include "lib/base64.hpp"
 
 #include "HaUtils.h"
 #include "HaDB.h"
@@ -236,9 +237,9 @@ void HaDB::publish() {
     configFile.close();
 }
 
-void HaDB::load(const std::string &file, bool force = false) {
+void HaDB::loadFromFile(const std::string &file, bool force = false) {
     // Get current date
-    const std::string curDate = currentDate("%Y-%m-%d");
+    const std::string curDate = currentDate(this->LOG_DATE_FORMAT);
     std::string leakUuid;
 
     if (!std::filesystem::exists(file)) {
@@ -299,7 +300,6 @@ void HaDB::load(const std::string &file, bool force = false) {
     fileOut.close();
 
     while (std::getline(ifs, line)) {
-        std::ofstream dataOutFile;
         std::ofstream logFile;
 
         // Data splitting
@@ -315,41 +315,17 @@ void HaDB::load(const std::string &file, bool force = false) {
             continue;
         }
 
-        std::string entryAbsLoc = fmt::format("{}/dataclass/{}/{}/{}/{}",
-                                              this->getRoot(),
-                                              dt,
-                                              dataMD5.substr(0, 2),
-                                              dataMD5.substr(2, 2),
-                                              dataMD5
-        );
-        std::string keyAbsLoc = fmt::format("{}/dataclass/{}/{}/{}/{}",
-                                            this->getRoot(),
-                                            keyDt,
-                                            keyMD5.substr(0, 2),
-                                            keyMD5.substr(2, 2),
-                                            keyMD5
-        );
+        std::string entryAbsLoc = this->getDataPath(dt, dataMD5);
+        std::string keyAbsLoc = this->getDataPath(keyDt, keyMD5);
+
         // Create Entry folder architecture if it does not exist yet
         if (!std::filesystem::exists(entryAbsLoc)) {
-            std::filesystem::create_directory(entryAbsLoc);
-
-            // Put data definition into folder if not created yet
-            std::string dataOutFileName = fmt::format("{}/{}.md5", entryAbsLoc, dataMD5);
-            dataOutFile.open(dataOutFileName);
-            dataOutFile << fmt::format("b64:{}\nmd5:{}\n", data_base64, dataMD5);
-            dataOutFile.close();
-
-            // Create links/ and logs/ subdirectory
-            std::filesystem::create_directory(entryAbsLoc + "/links");
-            std::filesystem::create_directory(entryAbsLoc + "/logs");
+            this->createEntry(dt, data_base64, dataMD5);
         }
 
         // Register entry log to acknowledge to we saw it
         // @TODO Handle log rotation
-        std::string logFileName = fmt::format("{}/logs/import.log", entryAbsLoc);
-        logFile.open(logFileName);
-        logFile << dataMD5 + " " + curDate + " " + leakUuid + "\n";
-        logFile.close();
+        this->log(dt, dataMD5, leakUuid, curDate);
 
         // Create bidirectional symlink only if it does not point to current data
         if (keyMD5 == dataMD5)
@@ -393,6 +369,32 @@ void HaDB::load(const std::string &file, bool force = false) {
     fileOut.close();
 }
 
+void HaDB::loadRaw(const std::string& dataclass, const std::string& value)
+{
+    std::string dataMD5 = md5(value);
+    std::string dataPath = this->getDataPath(dataclass, dataMD5);
+    if(std::filesystem::exists(dataPath))
+        return;
+
+    this->createEntry(dataclass, base64::to_base64(value), dataMD5);
+    this->log(dataclass, dataMD5, "00000000-0000-0000-0000-000000000000", currentDate(this->LOG_DATE_FORMAT));
+}
+
+void HaDB::log(const std::string& dataclass, const std::string& valueMD5, const std::string& sourceUUID, std::string curDate = "")
+{
+
+    std::string dataPath = this->getDataPath(dataclass, valueMD5);
+    if(curDate.empty())
+        curDate = currentDate(this->LOG_DATE_FORMAT);
+
+    std::ofstream logFile;
+    std::string logFileName = fmt::format("{}/logs/import.log", dataPath);
+    logFile.open(logFileName);
+    logFile << valueMD5 + " " + curDate + " " + sourceUUID + "\n";
+    logFile.close();
+}
+
+
 void HaDB::query(const std::string &dataclass, std::string searchString)
 {
     std::string searchHash = md5(std::move(searchString));
@@ -428,10 +430,8 @@ std::filesystem::directory_iterator HaDB::getDataLinks(const std::string& datacl
 
 std::string HaDB::getLogs(const std::string& dataclass, const std::string& md5Hash) {
 
-    std::string root1 = md5Hash.substr(0, 2);
-    std::string root2 = md5Hash.substr(2, 2);
     // Data path
-    std::string logPath = this->getRoot() + "/dataclass/" + dataclass + "/" + root1 + "/" + root2 + "/" + md5Hash;
+    std::string logPath = this->getDataPath(dataclass, md5Hash);
 
     if (!std::filesystem::exists(logPath)) {
         std::cerr << "Data does not exits" << std::endl;
@@ -439,4 +439,49 @@ std::string HaDB::getLogs(const std::string& dataclass, const std::string& md5Ha
     }
 
     return get_file_content(logPath + "/logs/import.log");
+}
+
+bool HaDB::createEntry(const std::string& dataclass, const std::string& dataBase64, std::string dataMD5 = "") {
+
+    if(dataMD5.empty())
+        dataMD5 = md5(base64::from_base64(dataBase64));
+
+    std::ofstream dataOutFile;
+    std::string entryAbsLoc = this->getDataPath(dataclass, dataMD5);
+
+    std::filesystem::create_directory(entryAbsLoc);
+
+    // Put data definition into folder if not created yet
+    std::string dataOutFileName = fmt::format("{}/{}.md5", entryAbsLoc, dataMD5);
+    dataOutFile.open(dataOutFileName);
+    dataOutFile << fmt::format("b64:{}\nmd5:{}\n", dataBase64, dataMD5);
+    dataOutFile.close();
+
+    // Create links/ and logs/ subdirectory
+    std::filesystem::create_directory(entryAbsLoc + "/links");
+    std::filesystem::create_directory(entryAbsLoc + "/logs");
+    std::ofstream output(entryAbsLoc + "/logs/import.log");
+
+    return true;
+}
+
+bool HaDB::updateEntry(const std::string& dataclass, const std::string& md5Hash, const std::string& newDataclass, const std::string& newValue)
+{
+    std::string newMD5 = md5(newValue);
+
+    if(dataclass == newDataclass && md5Hash == newMD5)
+        return true;
+
+    std::string originalDataPath = this->getDataPath(dataclass, md5Hash);
+    std::string newDataPath = this->getDataPath(newDataclass, newMD5);
+
+    // Create new entry
+    if(std::filesystem::exists(newDataPath))
+        return false;
+    this->createEntry(newDataclass, base64::to_base64(newValue));
+
+
+    // Update all link targets in actual entry
+
+    return true;
 }
