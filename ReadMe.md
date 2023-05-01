@@ -7,7 +7,8 @@ Hatofi, stands for "Hashmap to Filesystem" is a key-value database running on Li
 ## Usage
 
 - Database creation via config file via `hatofi [-d,--data-directory] <data_dir> gen [-c,--config] <config_file.txt>`
-- Import data using `hatofi [-d,--data-directory] <data_dir> load [-i,--input] <input.txt> [-f,--force /!\ Will erase existing data]`
+- Import data with file as input (use-case: bulk importation) `hatofi [-d,--data-directory] <data_dir> load [-i,--input] <input.txt> [-f,--force /!\ Will erase existing data]`
+- Import in-line data (use-case: one-time importation) `hatofi [-d,--data-directory] <data_dir> load [-D,--dataclass] <dataclass> [-T,--text] <data_plaintext>`
 - Query data (partial or exact match) using `hatofi [-d,--data-directory] <data_dir> query search [-D,--dataclass] <dataclass> [[-H,--hash] <data_md5> | [-T,--text] <data_plaintext>]`
 - Get linked data with `hatofi [-d,--data-directory] <data_dir> query links [-D,--dataclass] <dataclass> [-H,--hash] <data_md5>`
 - Get data importation logs with `hatofi [-d,--data-directory] <data_dir> query logs [-D,--dataclass] <dataclass> [-H,--hash] <data_md5>`
