@@ -11,8 +11,9 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -mavx2")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-add_subdirectory(lib/fmt-9.1.0 EXCLUDE_FROM_ALL)
+add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
+find_package(fmt REQUIRED)
 
-add_executable(hatofi lib/CLI11.hpp HaUtils.cpp HaUtils.h HaTable.cpp HaTable.h HaDB.cpp HaDB.h hatofi.cpp hatofi.h lib/uuid_v4.h lib/endianness.h lib/crypto/md5.h lib/crypto/md5.cpp Log.h Log.cpp lib/base64.hpp)
-find_package(fmt)
+add_executable(hatofi lib/CLI11.hpp HaUtils.cpp HaUtils.h HaTable.cpp HaTable.h HaDB.cpp HaDB.h Log.h Log.cpp hatofi.cpp hatofi.h lib/uuid_v4.h lib/endianness.h lib/crypto/md5.h lib/crypto/md5.cpp lib/base64.hpp)
+
 target_link_libraries(hatofi fmt::fmt)
