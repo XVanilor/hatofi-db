@@ -43,6 +43,7 @@ public:
 private:
     std::string dbName;
     std::string root;
+    bool entriesLog = false;
     std::vector<HaTable*> tables;
 
     std::string getDataPath(const std::string& dataclass, const std::string& dataMD5);

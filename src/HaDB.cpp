@@ -19,6 +19,7 @@
 
 HaDB::HaDB(const std::string &fsRoot) {
 
+    setName("HaDB");
     setRoot(fsRoot);
 }
 
@@ -92,8 +93,9 @@ HaDB *HaDB::loadConfig(const std::string &configFile) {
         if (line.empty() || line.starts_with("#"))
             continue;
 
-            // Process YAML section name lines
+        // Process YAML section name lines
         else if (line.starts_with("[") && line.ends_with("]")) {
+
             line.erase(0, 1);
             line.erase(line.length() - 1, 1);
             currentSectionName = line;
@@ -122,7 +124,19 @@ HaDB *HaDB::loadConfig(const std::string &configFile) {
                 if (key == "name") {
                     this->setName(value);
                     continue;
-                } else {
+                }
+                else if (key == "activate_entries_logging")
+                {
+                    if(value == "true")
+                        this->entriesLog = true;
+                    else if(value == "false")
+                        this->entriesLog = false;
+                    else
+                    {
+                        throw std::invalid_argument("Invalid config file at line " + std::to_string(i) + ": Unknown value for parameter `"+key+"`");
+                    }
+                }
+                else {
                     throw std::invalid_argument(
                             "Invalid config file at line " + std::to_string(i) + ": Unknown config key " +
                             currentSectionName);
@@ -382,6 +396,10 @@ void HaDB::loadRaw(const std::string& dataclass, const std::string& value)
 
 void HaDB::log(const std::string& dataclass, const std::string& valueMD5, const std::string& sourceUUID, std::string curDate = "")
 {
+    // Disable logging if requested in config
+    // However, logging directory will be created in all cases
+    if(!this->entriesLog)
+        return;
 
     std::string dataPath = this->getDataPath(dataclass, valueMD5);
     if(curDate.empty())

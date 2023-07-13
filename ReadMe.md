@@ -110,7 +110,9 @@ Desired filesystem output architecture:
 
 ## Changelog
 
-- **2.3.x**: Added raw data loading only from dataclass + value 
+- **2.3.x**: 
+  - Added raw data loading only from dataclass + value 
+  - Data import logging is now optional (>= 2.3.1)
 - **2.2.x**: Added back data base64 encoded value for simplication purposes. Added "Get Links", "Get Logs" and "Search by Hash" features
 - **2.1.x**: Remove support for partial data search: Database is now full anonymized
 - **v2.x**: Builds graph at importation, calculate heuristics to reduce keyspace at partial search
