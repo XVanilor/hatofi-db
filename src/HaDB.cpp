@@ -357,8 +357,27 @@ void HaDB::loadFromFile(const std::string &file, bool force = false) {
                                                        dataMD5.substr(2, 2),
                                                        dataMD5
         );
+
+        // Create key directory if not exists
         try {
-            // Create key to entry symlink
+            std::filesystem::create_directory(keyAbsLoc);
+        } catch (std::filesystem::filesystem_error &error) {
+            // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
+            if (error.code().message().find("File exists") == std::string::npos)
+                log_warn(error.what());
+        }
+
+        // Create entry directory if not exists
+        try {
+            std::filesystem::create_directory(entryAbsLoc);
+        } catch (std::filesystem::filesystem_error &error) {
+            // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
+            if (error.code().message().find("File exists") == std::string::npos)
+                log_warn(error.what());
+        }
+
+        // Create key to entry symlink
+        try {
             std::filesystem::create_directory_symlink(dataRelativeLocation, keyAbsLoc + "/links/" + dataMD5);
         } catch (std::filesystem::filesystem_error &error) {
             // Warn only if error is not "File exists"
@@ -366,8 +385,9 @@ void HaDB::loadFromFile(const std::string &file, bool force = false) {
                 log_warn(error.what());
             // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
         }
+
+        // Create entry to key symlink
         try {
-            // Create entry to key symlink
             std::filesystem::create_directory_symlink(keyRelativeLocation, entryAbsLoc + "/links/" + keyMD5);
         } catch (std::filesystem::filesystem_error &error) {
             // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
