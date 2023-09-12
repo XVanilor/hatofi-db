@@ -42,7 +42,7 @@ std::string HaDB::getRoot() {
     return this->root;
 }
 
-std::string HaDB::getDataPath(const std::string &dataclass, const std::string& dataMD5) {
+std::string HaDB::getDataPath(const std::string &dataclass, const std::string &dataMD5) {
 
     // Performs exact and full match search using MD5 hash
     // Get first 2 and 4th bytes of MD5 hash
@@ -93,7 +93,7 @@ HaDB *HaDB::loadConfig(const std::string &configFile) {
         if (line.empty() || line.starts_with("#"))
             continue;
 
-        // Process YAML section name lines
+            // Process YAML section name lines
         else if (line.starts_with("[") && line.ends_with("]")) {
 
             line.erase(0, 1);
@@ -124,19 +124,17 @@ HaDB *HaDB::loadConfig(const std::string &configFile) {
                 if (key == "name") {
                     this->setName(value);
                     continue;
-                }
-                else if (key == "activate_entries_logging")
-                {
-                    if(value == "true")
+                } else if (key == "activate_entries_logging") {
+                    if (value == "true")
                         this->entriesLog = true;
-                    else if(value == "false")
+                    else if (value == "false")
                         this->entriesLog = false;
-                    else
-                    {
-                        throw std::invalid_argument("Invalid config file at line " + std::to_string(i) + ": Unknown value for parameter `"+key+"`");
+                    else {
+                        throw std::invalid_argument(
+                                "Invalid config file at line " + std::to_string(i) + ": Unknown value for parameter `" +
+                                key + "`");
                     }
-                }
-                else {
+                } else {
                     throw std::invalid_argument(
                             "Invalid config file at line " + std::to_string(i) + ": Unknown config key " +
                             currentSectionName);
@@ -358,22 +356,15 @@ void HaDB::loadFromFile(const std::string &file, bool force = false) {
                                                        dataMD5
         );
 
-        // Create key directory if not exists
-        try {
-            std::filesystem::create_directory(keyAbsLoc);
-        } catch (std::filesystem::filesystem_error &error) {
-            // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
-            if (error.code().message().find("File exists") == std::string::npos)
-                log_warn(error.what());
-        }
-
-        // Create entry directory if not exists
-        try {
-            std::filesystem::create_directory(entryAbsLoc);
-        } catch (std::filesystem::filesystem_error &error) {
-            // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
-            if (error.code().message().find("File exists") == std::string::npos)
-                log_warn(error.what());
+        // Create key entry as anonymous (eg: without b54 value) if not exists
+        if (!std::filesystem::exists(keyAbsLoc)) {
+            try {
+                this->createAnonymousEntry(keyDt, keyMD5);
+            } catch (std::filesystem::filesystem_error &error) {
+                // This will happen mostly in cases where symlink already exists. If not, you have another serious problem with your fs
+                if (error.code().message().find("File exists") == std::string::npos)
+                    log_warn(error.what());
+            }
         }
 
         // Create key to entry symlink
@@ -403,26 +394,25 @@ void HaDB::loadFromFile(const std::string &file, bool force = false) {
     fileOut.close();
 }
 
-void HaDB::loadRaw(const std::string& dataclass, const std::string& value)
-{
+void HaDB::loadRaw(const std::string &dataclass, const std::string &value) {
     std::string dataMD5 = md5(value);
     std::string dataPath = this->getDataPath(dataclass, dataMD5);
-    if(std::filesystem::exists(dataPath))
+    if (std::filesystem::exists(dataPath))
         return;
 
     this->createEntry(dataclass, base64::to_base64(value), dataMD5);
     this->log(dataclass, dataMD5, "00000000-0000-0000-0000-000000000000", currentDate(this->LOG_DATE_FORMAT));
 }
 
-void HaDB::log(const std::string& dataclass, const std::string& valueMD5, const std::string& sourceUUID, std::string curDate = "")
-{
+void HaDB::log(const std::string &dataclass, const std::string &valueMD5, const std::string &sourceUUID,
+               std::string curDate = "") {
     // Disable logging if requested in config
     // However, logging directory will be created in all cases
-    if(!this->entriesLog)
+    if (!this->entriesLog)
         return;
 
     std::string dataPath = this->getDataPath(dataclass, valueMD5);
-    if(curDate.empty())
+    if (curDate.empty())
         curDate = currentDate(this->LOG_DATE_FORMAT);
 
     std::ofstream logFile;
@@ -433,14 +423,12 @@ void HaDB::log(const std::string& dataclass, const std::string& valueMD5, const 
 }
 
 
-void HaDB::query(const std::string &dataclass, std::string searchString)
-{
+void HaDB::query(const std::string &dataclass, std::string searchString) {
     std::string searchHash = md5(std::move(searchString));
     return this->query_by_hash(dataclass, searchHash);
 }
 
-void HaDB::query_by_hash(const std::string& dataclass, const std::string& searchHash)
-{
+void HaDB::query_by_hash(const std::string &dataclass, const std::string &searchHash) {
     // File path
     std::string fPath = this->getDataPath(dataclass, searchHash) + "/" + searchHash + ".md5";
 
@@ -453,7 +441,7 @@ void HaDB::query_by_hash(const std::string& dataclass, const std::string& search
     system(cmd0.c_str());
 }
 
-std::filesystem::directory_iterator HaDB::getDataLinks(const std::string& dataclass, const std::string& md5Hash) {
+std::filesystem::directory_iterator HaDB::getDataLinks(const std::string &dataclass, const std::string &md5Hash) {
 
     // Data path
     std::string dataPath = getDataPath(dataclass, md5Hash);
@@ -466,7 +454,7 @@ std::filesystem::directory_iterator HaDB::getDataLinks(const std::string& datacl
     return std::filesystem::directory_iterator(dataPath + "/links");
 }
 
-std::string HaDB::getLogs(const std::string& dataclass, const std::string& md5Hash) {
+std::string HaDB::getLogs(const std::string &dataclass, const std::string &md5Hash) {
 
     // Data path
     std::string logPath = this->getDataPath(dataclass, md5Hash);
@@ -479,9 +467,26 @@ std::string HaDB::getLogs(const std::string& dataclass, const std::string& md5Ha
     return get_file_content(logPath + "/logs/import.log");
 }
 
-bool HaDB::createEntry(const std::string& dataclass, const std::string& dataBase64, std::string dataMD5 = "") {
+bool HaDB::createAnonymousEntry(const std::string &dataclass, std::string dataMD5) {
 
-    if(dataMD5.empty())
+    std::ofstream dataOutFile;
+    std::string entryAbsLoc = this->getDataPath(dataclass, dataMD5);
+
+    std::filesystem::create_directory(entryAbsLoc);
+
+    // Put data definition into folder if not created yet
+    std::string dataOutFileName = fmt::format("{}/{}.md5", entryAbsLoc, dataMD5);
+    dataOutFile.open(dataOutFileName);
+    dataOutFile << fmt::format("md5:{}\n", dataMD5);
+    dataOutFile.close();
+
+    HaDB::createEntryStruct(entryAbsLoc);
+    return true;
+}
+
+bool HaDB::createEntry(const std::string &dataclass, const std::string &dataBase64, std::string dataMD5 = "") {
+
+    if (dataMD5.empty())
         dataMD5 = md5(base64::from_base64(dataBase64));
 
     std::ofstream dataOutFile;
@@ -492,8 +497,15 @@ bool HaDB::createEntry(const std::string& dataclass, const std::string& dataBase
     // Put data definition into folder if not created yet
     std::string dataOutFileName = fmt::format("{}/{}.md5", entryAbsLoc, dataMD5);
     dataOutFile.open(dataOutFileName);
-    dataOutFile << fmt::format("b64:{}\nmd5:{}\n", dataBase64, dataMD5);
+    dataOutFile << fmt::format("md5:{}\nb64:{}\n", dataBase64, dataMD5);
     dataOutFile.close();
+
+    HaDB::createEntryStruct(entryAbsLoc);
+
+    return true;
+}
+
+bool HaDB::createEntryStruct(std::string &entryAbsLoc) {
 
     // Create links/ and logs/ subdirectory
     std::filesystem::create_directory(entryAbsLoc + "/links");
@@ -503,18 +515,18 @@ bool HaDB::createEntry(const std::string& dataclass, const std::string& dataBase
     return true;
 }
 
-bool HaDB::updateEntry(const std::string& dataclass, const std::string& md5Hash, const std::string& newDataclass, const std::string& newValue)
-{
+bool HaDB::updateEntry(const std::string &dataclass, const std::string &md5Hash, const std::string &newDataclass,
+                       const std::string &newValue) {
     std::string newMD5 = md5(newValue);
 
-    if(dataclass == newDataclass && md5Hash == newMD5)
+    if (dataclass == newDataclass && md5Hash == newMD5)
         return true;
 
     std::string originalDataPath = this->getDataPath(dataclass, md5Hash);
     std::string newDataPath = this->getDataPath(newDataclass, newMD5);
 
     // Create new entry
-    if(std::filesystem::exists(newDataPath))
+    if (std::filesystem::exists(newDataPath))
         return false;
     this->createEntry(newDataclass, base64::to_base64(newValue));
 

@@ -47,6 +47,8 @@ private:
     std::vector<HaTable*> tables;
 
     std::string getDataPath(const std::string& dataclass, const std::string& dataMD5);
+    static bool createEntryStruct(std::string& entryAbsLoc);
+    bool createAnonymousEntry(const std::string& dataclass, std::string dataMD5);
     bool createEntry(const std::string& dataclass, const std::string& dataBase64, std::string dataMD5);
 
 };
