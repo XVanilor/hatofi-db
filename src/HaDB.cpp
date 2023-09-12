@@ -497,7 +497,7 @@ bool HaDB::createEntry(const std::string &dataclass, const std::string &dataBase
     // Put data definition into folder if not created yet
     std::string dataOutFileName = fmt::format("{}/{}.md5", entryAbsLoc, dataMD5);
     dataOutFile.open(dataOutFileName);
-    dataOutFile << fmt::format("md5:{}\nb64:{}\n", dataBase64, dataMD5);
+    dataOutFile << fmt::format("md5:{}\nb64:{}\n", dataMD5, dataBase64);
     dataOutFile.close();
 
     HaDB::createEntryStruct(entryAbsLoc);
